@@ -1,8 +1,8 @@
 import enum
 import typing
 
-from .exceptions import SOCKSError, ProtocolError
-from .utils import AddressType, encode_address, decode_address
+from .exceptions import ProtocolError, SOCKSError
+from .utils import AddressType, decode_address, encode_address
 
 
 class SOCKS4ReplyCode(bytes, enum.Enum):

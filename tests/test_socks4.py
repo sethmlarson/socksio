@@ -1,11 +1,11 @@
 import pytest
 
 from socks import (
-    SOCKS4Connection,
-    SOCKS4Command,
-    SOCKS4ReplyCode,
-    SOCKS4Reply,
     ProtocolError,
+    SOCKS4Command,
+    SOCKS4Connection,
+    SOCKS4Reply,
+    SOCKS4ReplyCode,
 )
 
 
@@ -65,4 +65,3 @@ def test_socks4_receive_malformed_data() -> None:
 
     with pytest.raises(ProtocolError):
         conn.receive_data(b"\x00Z\x1f\x90\x7f\x00\x00")  # missing one byte
-

@@ -1,7 +1,8 @@
 import enum
 import typing
 
-from .utils import AddressType, SOCKSError, encode_address
+from .exceptions import SOCKSError, ProtocolError
+from .utils import AddressType, encode_address, decode_address
 
 
 class SOCKS4ReplyCode(bytes, enum.Enum):
@@ -48,10 +49,17 @@ class SOCKS4ARequest(typing.NamedTuple):
 class SOCKS4Reply(typing.NamedTuple):
     reply_code: SOCKS4ReplyCode
     port: int
-    addr: bytes
+    addr: str
 
-    def loads(self, data: bytes) -> "SOCKS4Reply":
-        raise NotImplementedError()
+    @classmethod
+    def loads(cls, data: bytes) -> "SOCKS4Reply":
+        if len(data) != 8:
+            raise ProtocolError("Malformed reply")
+        return cls(
+            reply_code=SOCKS4ReplyCode(data[1:2]),
+            port=int.from_bytes(data[2:4], byteorder="big"),
+            addr=decode_address(AddressType.IPV4, bytes(data[4:8])),
+        )
 
 
 class SOCKS4Connection:
@@ -83,9 +91,9 @@ class SOCKS4Connection:
         request = SOCKS4Request(command, port, encoded_addr, user_id)
         self._data_to_send += request.dumps()
 
-    def receive_data(self, data: bytes) -> typing.List[SOCKS4Reply]:
+    def receive_data(self, data: bytes) -> SOCKS4Reply:
         self._received_data += data
-        raise NotImplementedError()
+        return SOCKS4Reply.loads(self._received_data)
 
     def data_to_send(self) -> bytes:
         data = bytes(self._data_to_send)

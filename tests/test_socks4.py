@@ -1,6 +1,12 @@
 import pytest
 
-from socks import SOCKS4Connection, SOCKS4Command
+from socks import (
+    SOCKS4Connection,
+    SOCKS4Command,
+    SOCKS4ReplyCode,
+    SOCKS4Reply,
+    ProtocolError,
+)
 
 
 @pytest.mark.parametrize("command", [SOCKS4Command.BIND, SOCKS4Command.CONNECT])
@@ -32,3 +38,31 @@ def test_socks4_connection_request_user_id(command: SOCKS4Command) -> None:
     assert data[4:8] == b"\x7f\x00\x00\x01"
     assert data[8:13] == "socks".encode()
     assert data[13] == 0
+
+
+@pytest.mark.parametrize("request_reply_code", [value for value in SOCKS4ReplyCode])
+def test_socks4_receive_data(request_reply_code: bytes) -> None:
+    conn = SOCKS4Connection()
+
+    reply = conn.receive_data(
+        b"".join(
+            [
+                b"\x00",
+                request_reply_code,
+                (8080).to_bytes(2, byteorder="big"),
+                b"\x7f\x00\x00\x01",
+            ]
+        )
+    )
+
+    assert reply == SOCKS4Reply(
+        reply_code=SOCKS4ReplyCode(request_reply_code), port=8080, addr="127.0.0.1"
+    )
+
+
+def test_socks4_receive_malformed_data() -> None:
+    conn = SOCKS4Connection()
+
+    with pytest.raises(ProtocolError):
+        conn.receive_data(b"\x00Z\x1f\x90\x7f\x00\x00")  # missing one byte
+

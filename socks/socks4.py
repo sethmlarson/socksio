@@ -25,12 +25,12 @@ class SOCKS4Request(typing.NamedTuple):
     def dumps(self) -> bytes:
         return b"".join(
             [
-                bytes([4]),
+                b"\x04",
                 bytes(self.command),
                 (self.port).to_bytes(2, byteorder="big"),
                 self.addr,
                 self.user_id,
-                bytes([0]),
+                b"\x00",
             ]
         )
 

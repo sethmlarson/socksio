@@ -3,7 +3,7 @@ from .socks4 import (
     SOCKS4Command,
     SOCKS4Connection,
     SOCKS4Reply,
-    SOCKS4Request
+    SOCKS4Request,
 )
 from .socks5 import (
     SOCKS5Reply,
@@ -14,7 +14,7 @@ from .socks5 import (
     SOCKS5Command,
     SOCKS5Connection,
     SOCKS5ReplyCode,
-    SOCKS5Request
+    SOCKS5Request,
 )
 from .utils import SOCKSError
 

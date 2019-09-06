@@ -1,6 +1,7 @@
 import enum
 import typing
-from .utils import encode_address, AddressType, SOCKSError
+
+from .utils import AddressType, SOCKSError, encode_address
 
 
 class SOCKS4ReplyCode(bytes, enum.Enum):
@@ -45,7 +46,7 @@ class SOCKS4Reply(typing.NamedTuple):
 
 
 class SOCKS4Connection:
-    def __init__(self, user_id: bytes = None, allow_domain_names: bool=False):
+    def __init__(self, user_id: bytes = None, allow_domain_names: bool = False):
         self.user_id = user_id
 
         # Set to 'True' when using 'socks4a://'
@@ -54,7 +55,9 @@ class SOCKS4Connection:
         self._data_to_send = bytearray()
         self._received_data = bytearray()
 
-    def request(self, command, addr: str, port: int, user_id: typing.Optional[bytes]=None):
+    def request(
+        self, command, addr: str, port: int, user_id: typing.Optional[bytes] = None
+    ):
         if user_id is None:
             user_id = self.user_id or b""
 

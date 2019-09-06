@@ -1,6 +1,7 @@
 import enum
 import typing
-from .utils import encode_address, AddressType
+
+from .utils import AddressType, encode_address
 
 
 class SOCKS5AuthMethod(bytes, enum.Enum):
@@ -106,14 +107,13 @@ class SOCKS5Connection:
             atype = SOCKS5AType.DOMAIN_NAME
 
         request = SOCKS5Request(
-            command=command,
-            atype=atype,
-            addr=encoded_addr,
-            port=port
+            command=command, atype=atype, addr=encoded_addr, port=port
         )
         self._data_to_send += request.dumps()
 
-    def receive_data(self, data: bytes) -> typing.List[typing.Union[SOCKS5AuthReply, SOCKS5Reply]]:
+    def receive_data(
+        self, data: bytes
+    ) -> typing.List[typing.Union[SOCKS5AuthReply, SOCKS5Reply]]:
         self._received_data += data
         raise NotImplementedError()
 

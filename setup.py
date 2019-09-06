@@ -1,6 +1,6 @@
 import os
-from setuptools import setup
 
+from setuptools import setup
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 

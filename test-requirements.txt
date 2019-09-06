@@ -6,5 +6,6 @@ flake8-bugbear
 flake8-comprehensions
 isort
 mypy
+nox
 pytest
 pytest-cov

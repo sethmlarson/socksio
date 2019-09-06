@@ -1,6 +1,7 @@
 import enum
 import typing
-from .utils import encode_address, AddressType
+
+from .utils import AddressType, encode_address
 
 
 class SOCKS5AuthMethod(bytes, enum.Enum):

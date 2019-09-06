@@ -1,6 +1,7 @@
 import enum
 import typing
-from .utils import encode_address, AddressType, SOCKSError
+
+from .utils import AddressType, SOCKSError, encode_address
 
 
 class SOCKS4ReplyCode(bytes, enum.Enum):

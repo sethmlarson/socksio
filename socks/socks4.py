@@ -19,11 +19,20 @@ class SOCKS4Command(bytes, enum.Enum):
 class SOCKS4Request(typing.NamedTuple):
     command: SOCKS4Command
     port: int
-    addr: str
+    addr: bytes
     user_id: bytes
 
     def dumps(self) -> bytes:
-        raise NotImplementedError()
+        return b"".join(
+            [
+                bytes([4]),
+                bytes(self.command),
+                (self.port).to_bytes(2, byteorder="big"),
+                self.addr,
+                self.user_id,
+                bytes([0]),
+            ]
+        )
 
 
 class SOCKS4ARequest(typing.NamedTuple):
@@ -56,8 +65,12 @@ class SOCKS4Connection:
         self._received_data = bytearray()
 
     def request(
-        self, command, addr: str, port: int, user_id: typing.Optional[bytes] = None
-    ):
+        self,
+        command: SOCKS4Command,
+        addr: str,
+        port: int,
+        user_id: typing.Optional[bytes] = None,
+    ) -> None:
         if user_id is None:
             user_id = self.user_id or b""
 
@@ -67,7 +80,8 @@ class SOCKS4Connection:
         elif address_type == AddressType.DN and not self.allow_domain_names:
             raise SOCKSError("Domain names only supported by SOCKS4A")
 
-        raise NotImplementedError()
+        request = SOCKS4Request(command, port, encoded_addr, user_id)
+        self._data_to_send += request.dumps()
 
     def receive_data(self, data: bytes) -> typing.List[SOCKS4Reply]:
         self._received_data += data

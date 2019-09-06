@@ -26,7 +26,7 @@ class SOCKS4Request(typing.NamedTuple):
         return b"".join(
             [
                 b"\x04",
-                bytes(self.command),
+                self.command,
                 (self.port).to_bytes(2, byteorder="big"),
                 self.addr,
                 self.user_id,

@@ -60,8 +60,15 @@ def test_socks4_receive_data(request_reply_code: bytes) -> None:
     )
 
 
-def test_socks4_receive_malformed_data() -> None:
+@pytest.mark.parametrize(
+    "data",
+    [
+        b"\x00Z\x1f\x90\x7f\x00\x00",  # missing one byte
+        b"\x0FZ\x1f\x90\x7f\x00\x00\x01",  # not starting with 0
+    ],
+)
+def test_socks4_receive_malformed_data(data: bytes) -> None:
     conn = SOCKS4Connection()
 
     with pytest.raises(ProtocolError):
-        conn.receive_data(b"\x00Z\x1f\x90\x7f\x00\x00")  # missing one byte
+        conn.receive_data(data)

@@ -49,16 +49,16 @@ class SOCKS4ARequest(typing.NamedTuple):
 class SOCKS4Reply(typing.NamedTuple):
     reply_code: SOCKS4ReplyCode
     port: int
-    addr: str
+    addr: typing.Optional[str]
 
     @classmethod
     def loads(cls, data: bytes) -> "SOCKS4Reply":
-        if len(data) != 8:
+        if len(data) != 8 or data[0:1] != b"\x00":
             raise ProtocolError("Malformed reply")
         return cls(
             reply_code=SOCKS4ReplyCode(data[1:2]),
             port=int.from_bytes(data[2:4], byteorder="big"),
-            addr=decode_address(AddressType.IPV4, bytes(data[4:8])),
+            addr=decode_address(AddressType.IPV4, data[4:8]),
         )
 
 
@@ -93,7 +93,7 @@ class SOCKS4Connection:
 
     def receive_data(self, data: bytes) -> SOCKS4Reply:
         self._received_data += data
-        return SOCKS4Reply.loads(self._received_data)
+        return SOCKS4Reply.loads(bytes(self._received_data))
 
     def data_to_send(self) -> bytes:
         data = bytes(self._data_to_send)

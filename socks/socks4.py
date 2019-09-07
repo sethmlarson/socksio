@@ -1,7 +1,8 @@
 import enum
 import typing
 
-from .utils import AddressType, SOCKSError, encode_address
+from .exceptions import ProtocolError, SOCKSError
+from .utils import AddressType, decode_address, encode_address
 
 
 class SOCKS4ReplyCode(bytes, enum.Enum):
@@ -19,11 +20,20 @@ class SOCKS4Command(bytes, enum.Enum):
 class SOCKS4Request(typing.NamedTuple):
     command: SOCKS4Command
     port: int
-    addr: str
+    addr: bytes
     user_id: bytes
 
     def dumps(self) -> bytes:
-        raise NotImplementedError()
+        return b"".join(
+            [
+                b"\x04",
+                self.command,
+                (self.port).to_bytes(2, byteorder="big"),
+                self.addr,
+                self.user_id,
+                b"\x00",
+            ]
+        )
 
 
 class SOCKS4ARequest(typing.NamedTuple):
@@ -39,10 +49,21 @@ class SOCKS4ARequest(typing.NamedTuple):
 class SOCKS4Reply(typing.NamedTuple):
     reply_code: SOCKS4ReplyCode
     port: int
-    addr: bytes
+    addr: typing.Optional[str]
 
-    def loads(self, data: bytes) -> "SOCKS4Reply":
-        raise NotImplementedError()
+    @classmethod
+    def loads(cls, data: bytes) -> "SOCKS4Reply":
+        if len(data) != 8 or data[0:1] != b"\x00":
+            raise ProtocolError("Malformed reply")
+
+        try:
+            return cls(
+                reply_code=SOCKS4ReplyCode(data[1:2]),
+                port=int.from_bytes(data[2:4], byteorder="big"),
+                addr=decode_address(AddressType.IPV4, data[4:8]),
+            )
+        except ValueError as exc:
+            raise ProtocolError("Malformed reply") from exc
 
 
 class SOCKS4Connection:
@@ -56,8 +77,12 @@ class SOCKS4Connection:
         self._received_data = bytearray()
 
     def request(
-        self, command, addr: str, port: int, user_id: typing.Optional[bytes] = None
-    ):
+        self,
+        command: SOCKS4Command,
+        addr: str,
+        port: int,
+        user_id: typing.Optional[bytes] = None,
+    ) -> None:
         if user_id is None:
             user_id = self.user_id or b""
 
@@ -67,11 +92,12 @@ class SOCKS4Connection:
         elif address_type == AddressType.DN and not self.allow_domain_names:
             raise SOCKSError("Domain names only supported by SOCKS4A")
 
-        raise NotImplementedError()
+        request = SOCKS4Request(command, port, encoded_addr, user_id)
+        self._data_to_send += request.dumps()
 
-    def receive_data(self, data: bytes) -> typing.List[SOCKS4Reply]:
+    def receive_data(self, data: bytes) -> SOCKS4Reply:
         self._received_data += data
-        raise NotImplementedError()
+        return SOCKS4Reply.loads(bytes(self._received_data))
 
     def data_to_send(self) -> bytes:
         data = bytes(self._data_to_send)

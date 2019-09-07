@@ -10,8 +10,8 @@ def lint(session):
     session.install("autoflake", "black", "flake8", "isort", "seed-isort-config")
 
     session.run("autoflake", "--in-place", "--recursive", *source_files)
-    session.run("seed-isort-config", "--application-directories=httpx")
-    session.run("isort", "--project=httpx", "--recursive", "--apply", *source_files)
+    session.run("seed-isort-config", "--application-directories=socks")
+    session.run("isort", "--project=socks", "--recursive", "--apply", *source_files)
     session.run("black", "--target-version=py36", *source_files)
 
     check(session)

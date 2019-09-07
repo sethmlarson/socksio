@@ -1,3 +1,4 @@
+from .exceptions import ProtocolError, SOCKSError
 from .socks4 import (
     SOCKS4Command,
     SOCKS4Connection,
@@ -16,7 +17,6 @@ from .socks5 import (
     SOCKS5ReplyCode,
     SOCKS5Request,
 )
-from .utils import SOCKSError
 
 __all__ = [
     "SOCKS5Request",
@@ -34,4 +34,5 @@ __all__ = [
     "SOCKS4Command",
     "SOCKS4ReplyCode",
     "SOCKSError",
+    "ProtocolError",
 ]

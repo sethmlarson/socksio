@@ -4,10 +4,6 @@ import socket
 import typing
 
 
-class SOCKSError(Exception):
-    """Generic exception for when something goes wrong"""
-
-
 class AddressType(enum.Enum):
     IPV4 = "IPV4"
     IPV6 = "IPV6"

@@ -89,11 +89,11 @@ class SOCKS5Datagram(typing.NamedTuple):
 
 
 class SOCKS5Connection:
-    def __init__(self):
+    def __init__(self) -> None:
         self._data_to_send = bytearray()
         self._received_data = bytearray()
 
-    def authenticate(self, methods: typing.List[SOCKS5AuthMethod]):
+    def authenticate(self, methods: typing.List[SOCKS5AuthMethod]) -> None:
         raise NotImplementedError()
 
     def request(self, command: SOCKS5Command, addr: str, port: int) -> None:

@@ -55,11 +55,15 @@ class SOCKS4Reply(typing.NamedTuple):
     def loads(cls, data: bytes) -> "SOCKS4Reply":
         if len(data) != 8 or data[0:1] != b"\x00":
             raise ProtocolError("Malformed reply")
-        return cls(
-            reply_code=SOCKS4ReplyCode(data[1:2]),
-            port=int.from_bytes(data[2:4], byteorder="big"),
-            addr=decode_address(AddressType.IPV4, data[4:8]),
-        )
+
+        try:
+            return cls(
+                reply_code=SOCKS4ReplyCode(data[1:2]),
+                port=int.from_bytes(data[2:4], byteorder="big"),
+                addr=decode_address(AddressType.IPV4, data[4:8]),
+            )
+        except ValueError as exc:
+            raise ProtocolError("Malformed reply") from exc
 
 
 class SOCKS4Connection:

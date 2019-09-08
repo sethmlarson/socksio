@@ -78,8 +78,10 @@ class SOCKS4Reply(typing.NamedTuple):
 
 
 class SOCKS4Connection:
-    def __init__(self, user_id: bytes):
+    def __init__(self, user_id: bytes, allow_domain_names: bool = False):
         self.user_id = user_id
+        self.allow_domain_names = allow_domain_names
+
         self._data_to_send = bytearray()
         self._received_data = bytearray()
 
@@ -100,6 +102,8 @@ class SOCKS4Connection:
         if address_type == AddressType.IPV6:
             raise SOCKSError("IPv6 addresses not supported by SOCKS4")
         elif address_type == AddressType.DN:
+            if not self.allow_domain_names:
+                raise SOCKSError("Domain names only supported by SOCKS4A")
             RequestCls = SOCKS4ARequest
 
         request = RequestCls(command, port, encoded_addr, user_id)

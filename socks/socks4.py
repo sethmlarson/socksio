@@ -67,7 +67,7 @@ class SOCKS4Reply(typing.NamedTuple):
 
 
 class SOCKS4Connection:
-    def __init__(self, user_id: bytes = None, allow_domain_names: bool = False):
+    def __init__(self, user_id: bytes, allow_domain_names: bool = False):
         self.user_id = user_id
 
         # Set to 'True' when using 'socks4a://'

@@ -6,6 +6,7 @@ from socks import (
     SOCKS4Connection,
     SOCKS4Reply,
     SOCKS4ReplyCode,
+    SOCKSError,
 )
 
 
@@ -74,3 +75,10 @@ def test_SOCKS4A_connection_request(command: SOCKS4Command) -> None:
     assert data[4:8] == b"\x00\x00\x00\xFF"
     assert data[8:14] == b"socks\x00"
     assert data[14:] == b"proxy.example.com\x00"
+
+
+def test_SOCKS4_does_not_support_ipv6() -> None:
+    conn = SOCKS4Connection(user_id=b"socks")
+
+    with pytest.raises(SOCKSError):
+        conn.request(command=SOCKS4Command.BIND, addr="0:0:0:0:0:0:0:1", port=8080)

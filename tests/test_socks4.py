@@ -6,6 +6,7 @@ from socks import (
     SOCKS4Connection,
     SOCKS4Reply,
     SOCKS4ReplyCode,
+    SOCKSError,
 )
 
 
@@ -58,3 +59,33 @@ def test_socks4_receive_malformed_data(data: bytes) -> None:
 
     with pytest.raises(ProtocolError):
         conn.receive_data(data)
+
+
+@pytest.mark.parametrize("command", [SOCKS4Command.BIND, SOCKS4Command.CONNECT])
+def test_SOCKS4A_connection_request(command: SOCKS4Command) -> None:
+    conn = SOCKS4Connection(user_id=b"socks", allow_domain_names=True)
+
+    conn.request(command=command, addr="proxy.example.com", port=8080)
+
+    data = conn.data_to_send()
+    assert len(data) == 32
+    assert data[0:1] == b"\x04"
+    assert data[1:2] == command
+    assert data[2:4] == (8080).to_bytes(2, byteorder="big")
+    assert data[4:8] == b"\x00\x00\x00\xFF"
+    assert data[8:14] == b"socks\x00"
+    assert data[14:] == b"proxy.example.com\x00"
+
+
+def test_SOCKS4_raises_if_passed_domain_name() -> None:
+    conn = SOCKS4Connection(user_id=b"socks")
+
+    with pytest.raises(SOCKSError):
+        conn.request(command=SOCKS4Command.BIND, addr="proxy.example.com", port=8080)
+
+
+def test_SOCKS4_does_not_support_ipv6() -> None:
+    conn = SOCKS4Connection(user_id=b"socks")
+
+    with pytest.raises(SOCKSError):
+        conn.request(command=SOCKS4Command.BIND, addr="0:0:0:0:0:0:0:1", port=8080)

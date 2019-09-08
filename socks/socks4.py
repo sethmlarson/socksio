@@ -39,11 +39,22 @@ class SOCKS4Request(typing.NamedTuple):
 class SOCKS4ARequest(typing.NamedTuple):
     command: SOCKS4Command
     port: int
-    addr: str
+    addr: bytes
     user_id: bytes
 
     def dumps(self) -> bytes:
-        raise NotImplementedError()
+        return b"".join(
+            [
+                b"\x04",
+                self.command,
+                (self.port).to_bytes(2, byteorder="big"),
+                b"\x00\x00\x00\xFF",  # arbitrary final non-zero byte
+                self.user_id,
+                b"\x00",
+                self.addr,
+                b"\x00",
+            ]
+        )
 
 
 class SOCKS4Reply(typing.NamedTuple):
@@ -67,12 +78,8 @@ class SOCKS4Reply(typing.NamedTuple):
 
 
 class SOCKS4Connection:
-    def __init__(self, user_id: bytes, allow_domain_names: bool = False):
+    def __init__(self, user_id: bytes):
         self.user_id = user_id
-
-        # Set to 'True' when using 'socks4a://'
-        self.allow_domain_names = allow_domain_names
-
         self._data_to_send = bytearray()
         self._received_data = bytearray()
 
@@ -86,13 +93,17 @@ class SOCKS4Connection:
         if user_id is None:
             user_id = self.user_id or b""
 
+        RequestCls: typing.Union[
+            typing.Type[SOCKS4Request], typing.Type[SOCKS4ARequest]
+        ] = SOCKS4Request
         address_type, encoded_addr = encode_address(addr)
         if address_type == AddressType.IPV6:
             raise SOCKSError("IPv6 addresses not supported by SOCKS4")
-        elif address_type == AddressType.DN and not self.allow_domain_names:
-            raise SOCKSError("Domain names only supported by SOCKS4A")
+        elif address_type == AddressType.DN:
+            RequestCls = SOCKS4ARequest
 
-        request = SOCKS4Request(command, port, encoded_addr, user_id)
+        request = RequestCls(command, port, encoded_addr, user_id)
+
         self._data_to_send += request.dumps()
 
     def receive_data(self, data: bytes) -> SOCKS4Reply:

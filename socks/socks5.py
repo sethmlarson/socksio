@@ -1,6 +1,7 @@
 import enum
 import typing
 
+from .exceptions import ProtocolError
 from .utils import AddressType, encode_address
 
 
@@ -39,7 +40,13 @@ class SOCKS5AuthRequest(typing.NamedTuple):
     methods: typing.List[SOCKS5AuthMethod]
 
     def dumps(self) -> bytes:
-        raise NotImplementedError()
+        return b"".join(
+            [
+                b"\x05",
+                len(self.methods).to_bytes(1, byteorder="big"),
+                b"".join(self.methods),
+            ]
+        )
 
 
 class SOCKS5AuthReply(typing.NamedTuple):
@@ -47,7 +54,13 @@ class SOCKS5AuthReply(typing.NamedTuple):
 
     @classmethod
     def loads(cls, data: bytes) -> "SOCKS5AuthReply":
-        raise NotImplementedError()
+        if len(data) != 2:
+            raise ProtocolError("Malformed reply")
+
+        try:
+            return cls(method=SOCKS5AuthMethod(data[1:2]))
+        except ValueError as exc:
+            raise ProtocolError("Malformed reply") from exc
 
 
 class SOCKS5Request(typing.NamedTuple):
@@ -88,15 +101,29 @@ class SOCKS5Datagram(typing.NamedTuple):
         raise NotImplementedError()
 
 
+class SOCKS5State(enum.IntEnum):
+    CLIENT_AUTH_REQUIRED = 1
+    SERVER_AUTH_REPLY = 2
+    CLIENT_AUTHENTICATED = 3
+    TUNNEL_READY = 4
+
+
 class SOCKS5Connection:
     def __init__(self) -> None:
         self._data_to_send = bytearray()
         self._received_data = bytearray()
+        self._state = SOCKS5State.CLIENT_AUTH_REQUIRED
 
     def authenticate(self, methods: typing.List[SOCKS5AuthMethod]) -> None:
-        raise NotImplementedError()
+        auth_request = SOCKS5AuthRequest(methods)
+        self._data_to_send += auth_request.dumps()
+        self._state = SOCKS5State.SERVER_AUTH_REPLY
 
     def request(self, command: SOCKS5Command, addr: str, port: int) -> None:
+        if self._state < SOCKS5State.CLIENT_AUTHENTICATED:
+            raise ProtocolError(
+                "SOCKS5 connections must be authenticated before sending a request"
+            )
         address_type, encoded_addr = encode_address(addr)
         if address_type == AddressType.IPV4:
             atype = SOCKS5AType.IPV4_ADDRESS
@@ -111,11 +138,12 @@ class SOCKS5Connection:
         )
         self._data_to_send += request.dumps()
 
-    def receive_data(
-        self, data: bytes
-    ) -> typing.List[typing.Union[SOCKS5AuthReply, SOCKS5Reply]]:
+    def receive_data(self, data: bytes) -> typing.Union[SOCKS5AuthReply, SOCKS5Reply]:
         self._received_data += data
-        raise NotImplementedError()
+        if self._state == SOCKS5State.SERVER_AUTH_REPLY:
+            return SOCKS5AuthReply.loads(self._received_data)
+        else:
+            raise NotImplementedError()
 
     def data_to_send(self) -> bytes:
         data = bytes(self._data_to_send)

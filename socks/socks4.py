@@ -92,8 +92,7 @@ class SOCKS4Connection:
         port: int,
         user_id: typing.Optional[bytes] = None,
     ) -> None:
-        if user_id is None:
-            user_id = self.user_id or b""
+        user_id = user_id or self.user_id
 
         RequestCls: typing.Union[
             typing.Type[SOCKS4Request], typing.Type[SOCKS4ARequest]

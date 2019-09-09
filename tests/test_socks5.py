@@ -3,10 +3,9 @@ import pytest
 from socks import (
     ProtocolError,
     SOCKS5AuthMethod,
-    SOCKS5AuthRequest,
-    SOCKS5Connection,
     SOCKS5AuthReply,
     SOCKS5Command,
+    SOCKS5Connection,
 )
 
 

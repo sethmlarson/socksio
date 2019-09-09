@@ -6,6 +6,7 @@ from socks import (
     SOCKS5AuthRequest,
     SOCKS5Connection,
     SOCKS5AuthReply,
+    SOCKS5Command,
 )
 
 
@@ -51,3 +52,19 @@ def test_socks5_auth_reply_no_acceptable_auth_method() -> None:
     reply = conn.receive_data(b"\x05\xFF")
 
     assert reply == SOCKS5AuthReply(method=SOCKS5AuthMethod.NO_ACCEPTABLE_METHODS)
+
+
+@pytest.mark.parametrize(
+    "data", [b"\x05", b"\x05\x10"]  # missing method byte , incorrect method value
+)
+def test_socks5_auth_reply_malformed(data: bytes) -> None:
+    conn = SOCKS5Connection()
+    conn.authenticate([SOCKS5AuthMethod.USERNAME_PASSWORD])
+    with pytest.raises(ProtocolError):
+        conn.receive_data(data)
+
+
+def test_socks5_request_require_authentication() -> None:
+    conn = SOCKS5Connection()
+    with pytest.raises(ProtocolError):
+        conn.request(SOCKS5Command.CONNECT, addr="127.0.0.1", port=1080)

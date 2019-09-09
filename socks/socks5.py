@@ -121,6 +121,10 @@ class SOCKS5Connection:
         self._state = SOCKS5State.SERVER_AUTH_REPLY
 
     def request(self, command: SOCKS5Command, addr: str, port: int) -> None:
+        if self._state < SOCKS5State.CLIENT_AUTHENTICATED:
+            raise ProtocolError(
+                "SOCKS5 connections must be authenticated before sending a request"
+            )
         address_type, encoded_addr = encode_address(addr)
         if address_type == AddressType.IPV4:
             atype = SOCKS5AType.IPV4_ADDRESS

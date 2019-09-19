@@ -7,6 +7,7 @@ from socks import (
     SOCKS5Command,
     SOCKS5Connection,
 )
+from socks.socks5 import SOCKS5State
 
 
 def test_socks5_auth_request() -> None:
@@ -67,3 +68,25 @@ def test_socks5_request_require_authentication() -> None:
     conn = SOCKS5Connection()
     with pytest.raises(ProtocolError):
         conn.request(SOCKS5Command.CONNECT, addr="127.0.0.1", port=1080)
+
+
+def test_socks5_auth_username_password_success() -> None:
+    conn = SOCKS5Connection()
+    conn.authenticate([SOCKS5AuthMethod.USERNAME_PASSWORD])
+    conn.data_to_send()
+    conn.receive_data(b"\x05" + SOCKS5AuthMethod.USERNAME_PASSWORD)
+    conn.authenticate_username_password(b"username", b"password")
+    assert conn.data_to_send() == b"\x01\x08username\x08password"
+    conn.receive_data(b"\x00")
+    assert conn._state == SOCKS5State.CLIENT_AUTHENTICATED
+
+
+def test_socks5_auth_username_password_fail() -> None:
+    conn = SOCKS5Connection()
+    conn.authenticate([SOCKS5AuthMethod.USERNAME_PASSWORD])
+    conn.data_to_send()
+    conn.receive_data(b"\x05" + SOCKS5AuthMethod.USERNAME_PASSWORD)
+    conn.authenticate_username_password(b"username", b"password")
+    assert conn.data_to_send() == b"\x01\x08username\x08password"
+    conn.receive_data(b"\x01")
+    assert conn._state == SOCKS5State.MUST_CLOSE

@@ -63,6 +63,30 @@ class SOCKS5AuthReply(typing.NamedTuple):
             raise ProtocolError("Malformed reply") from exc
 
 
+class SOCKS5UsernamePasswordRequest(typing.NamedTuple):
+    username: bytes
+    password: bytes
+
+    def dumps(self) -> bytes:
+        return b"".join(
+            [
+                b"\x01",
+                len(self.username).to_bytes(1, byteorder="big"),
+                self.username,
+                len(self.password).to_bytes(1, byteorder="big"),
+                self.password,
+            ]
+        )
+
+
+class SOCKS5UsernamePasswordReply(typing.NamedTuple):
+    success: bool
+
+    @classmethod
+    def loads(cls, data: bytes) -> "SOCKS5UsernamePasswordReply":
+        return cls(success=data == b"\x00")
+
+
 class SOCKS5Request(typing.NamedTuple):
     command: SOCKS5Command
     atype: SOCKS5AType
@@ -106,6 +130,9 @@ class SOCKS5State(enum.IntEnum):
     SERVER_AUTH_REPLY = 2
     CLIENT_AUTHENTICATED = 3
     TUNNEL_READY = 4
+    CLIENT_WAITING_FOR_USERNAME_PASSWORD = 5
+    SERVER_VERIFY_USERNAME_PASSWORD = 6
+    MUST_CLOSE = 7
 
 
 class SOCKS5Connection:
@@ -118,6 +145,13 @@ class SOCKS5Connection:
         auth_request = SOCKS5AuthRequest(methods)
         self._data_to_send += auth_request.dumps()
         self._state = SOCKS5State.SERVER_AUTH_REPLY
+
+    def authenticate_username_password(self, username: bytes, password: bytes) -> None:
+        if self._state != SOCKS5State.CLIENT_WAITING_FOR_USERNAME_PASSWORD:
+            raise ProtocolError("Not currently waiting for username and password")
+        self._state = SOCKS5State.SERVER_VERIFY_USERNAME_PASSWORD
+        request = SOCKS5UsernamePasswordRequest(username=username, password=password)
+        self._data_to_send += request.dumps()
 
     def request(self, command: SOCKS5Command, addr: str, port: int) -> None:
         if self._state < SOCKS5State.CLIENT_AUTHENTICATED:
@@ -138,10 +172,22 @@ class SOCKS5Connection:
         )
         self._data_to_send += request.dumps()
 
-    def receive_data(self, data: bytes) -> typing.Union[SOCKS5AuthReply, SOCKS5Reply]:
-        self._received_data += data
+    def receive_data(
+        self, data: bytes
+    ) -> typing.Union[SOCKS5AuthReply, SOCKS5Reply, SOCKS5UsernamePasswordReply]:
         if self._state == SOCKS5State.SERVER_AUTH_REPLY:
-            return SOCKS5AuthReply.loads(self._received_data)
+            auth_reply = SOCKS5AuthReply.loads(data)
+            if auth_reply.method == SOCKS5AuthMethod.USERNAME_PASSWORD:
+                self._state = SOCKS5State.CLIENT_WAITING_FOR_USERNAME_PASSWORD
+            return auth_reply
+
+        if self._state == SOCKS5State.SERVER_VERIFY_USERNAME_PASSWORD:
+            username_password_reply = SOCKS5UsernamePasswordReply.loads(data)
+            if username_password_reply.success:
+                self._state = SOCKS5State.CLIENT_AUTHENTICATED
+            else:
+                self._state = SOCKS5State.MUST_CLOSE
+            return username_password_reply
         else:
             raise NotImplementedError()
 

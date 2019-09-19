@@ -19,6 +19,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     python_requires=">=3.6",
+    package_data={"socks": ["py.typed"]},
     packages=["socks"],
     classifiers=[
         "License :: OSI Approved :: MIT License",

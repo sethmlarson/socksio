@@ -219,6 +219,7 @@ class SOCKS5Connection:
             return username_password_reply
 
         if self._state == SOCKS5State.CLIENT_AUTHENTICATED:
+            # TODO: set state to MUST_CLOSE on failure
             return SOCKS5Reply.loads(data)
 
         raise NotImplementedError()

@@ -24,6 +24,13 @@ class SOCKS5AType(bytes, enum.Enum):
     IPV6_ADDRESS = b"\x04"
 
 
+ATYPE_MAP = {
+    SOCKS5AType.IPV4_ADDRESS: AddressType.IPV4,
+    SOCKS5AType.DOMAIN_NAME: AddressType.DN,
+    SOCKS5AType.IPV6_ADDRESS: AddressType.IPV6,
+}
+
+
 class SOCKS5ReplyCode(bytes, enum.Enum):
     SUCCEEDED = b"\x00"
     GENERAL_SERVER_FAILURE = b"\x01"
@@ -115,11 +122,13 @@ class SOCKS5Reply(typing.NamedTuple):
     @classmethod
     def loads(cls, data: bytes) -> "SOCKS5Reply":
         try:
+            atype = SOCKS5AType(data[3:4])
+
             return cls(
                 reply_code=SOCKS5ReplyCode(data[1:2]),
-                atype=SOCKS5AType(data[3:4]),
-                addr=decode_address(AddressType.IPV4, data[4:8]),
-                port=int.from_bytes(data[8:10], byteorder="big"),
+                atype=atype,
+                addr=decode_address(ATYPE_MAP[atype], data[4:-2]),
+                port=int.from_bytes(data[-2:], byteorder="big"),
             )
         except ValueError as exc:
             raise ProtocolError("Malformed reply") from exc

@@ -161,15 +161,34 @@ def test_socks5_request_ipv6(
     assert data[20:] == (1080).to_bytes(2, byteorder="big")
 
 
-def test_socks5_reply_success(authenticated_conn: SOCKS5Connection) -> None:
+@pytest.mark.parametrize(
+    "atype,addr,expected_atype,expected_addr",
+    [
+        (b"\x01", b"\x7f\x00\x00\x01", SOCKS5AType.IPV4_ADDRESS, "127.0.0.1"),
+        (b"\x03", b"localhost", SOCKS5AType.DOMAIN_NAME, "localhost"),
+        (
+            b"\x04",
+            b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01",
+            SOCKS5AType.IPV6_ADDRESS,
+            "::1",
+        ),
+    ],
+)
+def test_socks5_reply_success(
+    authenticated_conn: SOCKS5Connection,
+    atype: bytes,
+    addr: bytes,
+    expected_atype: SOCKS5AType,
+    expected_addr: str,
+) -> None:
     reply = authenticated_conn.receive_data(
         b"".join(
             [
                 b"\x05",  # protocol version
                 b"\x00",  # reply
                 b"\x00",  # reserved
-                b"\x01",  # atype
-                b"\x7f\x00\x00\x01",  # addr
+                atype,
+                addr,
                 (1080).to_bytes(2, byteorder="big"),  # port
             ]
         )
@@ -177,7 +196,7 @@ def test_socks5_reply_success(authenticated_conn: SOCKS5Connection) -> None:
 
     assert reply == SOCKS5Reply(
         reply_code=SOCKS5ReplyCode.SUCCEEDED,
-        atype=SOCKS5AType.IPV4_ADDRESS,
-        addr="127.0.0.1",
+        atype=expected_atype,
+        addr=expected_addr,
         port=1080,
     )

@@ -121,6 +121,9 @@ class SOCKS5Reply(typing.NamedTuple):
 
     @classmethod
     def loads(cls, data: bytes) -> "SOCKS5Reply":
+        if data[0:1] != b"\x05":
+            raise ProtocolError("Malformed reply")
+
         try:
             atype = SOCKS5AType(data[3:4])
 

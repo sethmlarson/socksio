@@ -6,6 +6,9 @@ from socks import (
     SOCKS5AuthReply,
     SOCKS5Command,
     SOCKS5Connection,
+    SOCKS5Reply,
+    SOCKS5ReplyCode,
+    SOCKS5AType,
 )
 from socks.socks5 import SOCKS5State
 
@@ -156,3 +159,25 @@ def test_socks5_request_ipv6(
         == b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01"
     )
     assert data[20:] == (1080).to_bytes(2, byteorder="big")
+
+
+def test_socks5_reply_success(authenticated_conn: SOCKS5Connection) -> None:
+    reply = authenticated_conn.receive_data(
+        b"".join(
+            [
+                b"\x05",  # protocol version
+                b"\x00",  # reply
+                b"\x00",  # reserved
+                b"\x01",  # atype
+                b"\x7f\x00\x00\x01",  # addr
+                (1080).to_bytes(2, byteorder="big"),  # port
+            ]
+        )
+    )
+
+    assert reply == SOCKS5Reply(
+        reply_code=SOCKS5ReplyCode.SUCCEEDED,
+        atype=SOCKS5AType.IPV4_ADDRESS,
+        addr="127.0.0.1",
+        port=1080,
+    )

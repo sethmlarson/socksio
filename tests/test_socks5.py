@@ -64,12 +64,6 @@ def test_socks5_auth_reply_malformed(data: bytes) -> None:
         conn.receive_data(data)
 
 
-def test_socks5_request_require_authentication() -> None:
-    conn = SOCKS5Connection()
-    with pytest.raises(ProtocolError):
-        conn.request(SOCKS5Command.CONNECT, addr="127.0.0.1", port=1080)
-
-
 def test_socks5_auth_username_password_success() -> None:
     conn = SOCKS5Connection()
     conn.authenticate([SOCKS5AuthMethod.USERNAME_PASSWORD])
@@ -90,3 +84,39 @@ def test_socks5_auth_username_password_fail() -> None:
     assert conn.data_to_send() == b"\x01\x08username\x08password"
     conn.receive_data(b"\x01")
     assert conn._state == SOCKS5State.MUST_CLOSE
+
+
+def test_socks5_request_require_authentication() -> None:
+    conn = SOCKS5Connection()
+    with pytest.raises(ProtocolError):
+        conn.request(SOCKS5Command.CONNECT, addr="127.0.0.1", port=1080)
+
+
+@pytest.fixture
+def authenticated_conn() -> SOCKS5Connection:
+    conn = SOCKS5Connection()
+    conn.authenticate([SOCKS5AuthMethod.USERNAME_PASSWORD])
+    conn.data_to_send()
+    conn.receive_data(b"\x05" + SOCKS5AuthMethod.USERNAME_PASSWORD)
+    conn.authenticate_username_password(b"username", b"password")
+    conn.data_to_send()
+    conn.receive_data(b"\x00")
+    return conn
+
+
+@pytest.mark.parametrize("command", (SOCKS5Command.CONNECT, SOCKS5Command.BIND))
+def test_socks5_connect_request(
+    authenticated_conn: SOCKS5Connection, command: SOCKS5Command
+) -> None:
+    authenticated_conn.request(command, addr="127.0.0.1", port=1080)
+
+    data = authenticated_conn.data_to_send()
+
+    assert len(data) == 10
+    assert data[0:1] == b"\x05"
+    assert data[1:2] == command
+    assert data[2:3] == b"\x00"
+    assert data[3:4] == b"\x01"
+    assert data[4:8] == b"\x7f\x00\x00\x01"
+    assert data[8:] == (1080).to_bytes(2, byteorder="big")
+

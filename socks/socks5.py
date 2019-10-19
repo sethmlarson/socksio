@@ -94,7 +94,16 @@ class SOCKS5Request(typing.NamedTuple):
     port: int
 
     def dumps(self) -> bytes:
-        raise NotImplementedError()
+        return b"".join(
+            [
+                b"\x05",
+                self.command,
+                b"\x00",
+                self.atype,
+                self.addr,
+                (self.port).to_bytes(2, byteorder="big"),
+            ]
+        )
 
 
 class SOCKS5Reply(typing.NamedTuple):

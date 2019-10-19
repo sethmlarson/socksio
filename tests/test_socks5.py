@@ -105,7 +105,7 @@ def authenticated_conn() -> SOCKS5Connection:
 
 
 @pytest.mark.parametrize("command", (SOCKS5Command.CONNECT, SOCKS5Command.BIND))
-def test_socks5_connect_request(
+def test_socks5_request_ipv4(
     authenticated_conn: SOCKS5Connection, command: SOCKS5Command
 ) -> None:
     authenticated_conn.request(command, addr="127.0.0.1", port=1080)
@@ -120,3 +120,39 @@ def test_socks5_connect_request(
     assert data[4:8] == b"\x7f\x00\x00\x01"
     assert data[8:] == (1080).to_bytes(2, byteorder="big")
 
+
+@pytest.mark.parametrize("command", (SOCKS5Command.CONNECT, SOCKS5Command.BIND))
+def test_socks5_request_domain_name(
+    authenticated_conn: SOCKS5Connection, command: SOCKS5Command
+) -> None:
+    authenticated_conn.request(command, addr="localhost", port=1080)
+
+    data = authenticated_conn.data_to_send()
+
+    assert len(data) == 15
+    assert data[0:1] == b"\x05"
+    assert data[1:2] == command
+    assert data[2:3] == b"\x00"
+    assert data[3:4] == b"\x03"
+    assert data[4:13] == b"localhost"
+    assert data[13:] == (1080).to_bytes(2, byteorder="big")
+
+
+@pytest.mark.parametrize("command", (SOCKS5Command.CONNECT, SOCKS5Command.BIND))
+def test_socks5_request_ipv6(
+    authenticated_conn: SOCKS5Connection, command: SOCKS5Command
+) -> None:
+    authenticated_conn.request(command, addr="0:0:0:0:0:0:0:1", port=1080)
+
+    data = authenticated_conn.data_to_send()
+
+    assert len(data) == 22
+    assert data[0:1] == b"\x05"
+    assert data[1:2] == command
+    assert data[2:3] == b"\x00"
+    assert data[3:4] == b"\x04"
+    assert (
+        data[4:20]
+        == b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01"
+    )
+    assert data[20:] == (1080).to_bytes(2, byteorder="big")

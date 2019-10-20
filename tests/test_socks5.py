@@ -87,6 +87,12 @@ def test_socks5_auth_reply_malformed(data: bytes) -> None:
         conn.receive_data(data)
 
 
+def test_socks5_auth_username_password_requires_connect_waiting() -> None:
+    conn = SOCKS5Connection()
+    with pytest.raises(ProtocolError):
+        conn.authenticate_username_password(b"username", b"password")
+
+
 def test_socks5_auth_username_password_success() -> None:
     conn = SOCKS5Connection()
     conn.authenticate([SOCKS5AuthMethod.USERNAME_PASSWORD])
@@ -275,4 +281,3 @@ def test_socks5_reply_error(
     assert reply == SOCKS5Reply(
         reply_code=error_code, atype=expected_atype, addr=expected_addr, port=1080
     )
-

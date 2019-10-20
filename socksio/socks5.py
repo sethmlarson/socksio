@@ -151,10 +151,10 @@ class SOCKS5Datagram(typing.NamedTuple):
 
     @classmethod
     def loads(cls, data: bytes) -> "SOCKS5Datagram":
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: nocover
 
     def dumps(self) -> bytes:
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: nocover
 
 
 class SOCKS5State(enum.IntEnum):
@@ -229,7 +229,7 @@ class SOCKS5Connection:
 
             return reply
 
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: nocover
 
     def data_to_send(self) -> bytes:
         data = bytes(self._data_to_send)

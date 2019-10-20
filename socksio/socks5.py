@@ -173,6 +173,10 @@ class SOCKS5Connection:
         self._received_data = bytearray()
         self._state = SOCKS5State.CLIENT_AUTH_REQUIRED
 
+    @property
+    def state(self) -> SOCKS5State:
+        return self._state
+
     def authenticate(self, methods: typing.List[SOCKS5AuthMethod]) -> None:
         auth_request = SOCKS5AuthRequest(methods)
         self._data_to_send += auth_request.dumps()
@@ -217,8 +221,13 @@ class SOCKS5Connection:
             return username_password_reply
 
         if self._state == SOCKS5State.CLIENT_AUTHENTICATED:
-            # TODO: set state to MUST_CLOSE on failure
-            return SOCKS5Reply.loads(data)
+            reply = SOCKS5Reply.loads(data)
+            if reply.reply_code == SOCKS5ReplyCode.SUCCEEDED:
+                self._state = SOCKS5State.TUNNEL_READY
+            else:
+                self._state = SOCKS5State.MUST_CLOSE
+
+            return reply
 
         raise NotImplementedError()
 

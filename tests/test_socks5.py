@@ -95,7 +95,7 @@ def test_socks5_auth_username_password_success() -> None:
     conn.authenticate_username_password(b"username", b"password")
     assert conn.data_to_send() == b"\x01\x08username\x08password"
     conn.receive_data(b"\x00")
-    assert conn._state == SOCKS5State.CLIENT_AUTHENTICATED
+    assert conn.state == SOCKS5State.CLIENT_AUTHENTICATED
 
 
 def test_socks5_auth_username_password_fail() -> None:
@@ -106,7 +106,7 @@ def test_socks5_auth_username_password_fail() -> None:
     conn.authenticate_username_password(b"username", b"password")
     assert conn.data_to_send() == b"\x01\x08username\x08password"
     conn.receive_data(b"\x01")
-    assert conn._state == SOCKS5State.MUST_CLOSE
+    assert conn.state == SOCKS5State.MUST_CLOSE
 
 
 def test_socks5_request_require_authentication() -> None:
@@ -213,6 +213,7 @@ def test_socks5_reply_success(
     )
     reply = authenticated_conn.receive_data(data)
 
+    assert authenticated_conn.state == SOCKS5State.TUNNEL_READY
     assert reply == SOCKS5Reply(
         reply_code=SOCKS5ReplyCode.SUCCEEDED,
         atype=expected_atype,
@@ -234,3 +235,44 @@ def test_socks5_receive_malformed_data(
 ) -> None:
     with pytest.raises(ProtocolError):
         authenticated_conn.receive_data(data)
+
+
+@pytest.mark.parametrize("error_code", list(SOCKS5ReplyCode)[1:])
+@pytest.mark.parametrize(
+    "atype,addr,expected_atype,expected_addr",
+    [
+        (b"\x01", b"\x7f\x00\x00\x01", SOCKS5AType.IPV4_ADDRESS, "127.0.0.1"),
+        (b"\x03", b"localhost", SOCKS5AType.DOMAIN_NAME, "localhost"),
+        (
+            b"\x04",
+            b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01",
+            SOCKS5AType.IPV6_ADDRESS,
+            "::1",
+        ),
+    ],
+)
+def test_socks5_reply_error(
+    error_code: SOCKS5ReplyCode,
+    authenticated_conn: SOCKS5Connection,
+    atype: bytes,
+    addr: bytes,
+    expected_atype: SOCKS5AType,
+    expected_addr: str,
+) -> None:
+    data = b"".join(
+        [
+            b"\x05",  # protocol version
+            error_code,
+            b"\x00",  # reserved
+            atype,
+            addr,
+            (1080).to_bytes(2, byteorder="big"),  # port
+        ]
+    )
+    reply = authenticated_conn.receive_data(data)
+
+    assert authenticated_conn.state == SOCKS5State.MUST_CLOSE
+    assert reply == SOCKS5Reply(
+        reply_code=error_code, atype=expected_atype, addr=expected_addr, port=1080
+    )
+

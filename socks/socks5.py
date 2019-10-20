@@ -2,7 +2,7 @@ import enum
 import typing
 
 from .exceptions import ProtocolError
-from .utils import AddressType, encode_address
+from .utils import AddressType, decode_address, encode_address
 
 
 class SOCKS5AuthMethod(bytes, enum.Enum):
@@ -22,6 +22,13 @@ class SOCKS5AType(bytes, enum.Enum):
     IPV4_ADDRESS = b"\x01"
     DOMAIN_NAME = b"\x03"
     IPV6_ADDRESS = b"\x04"
+
+
+ATYPE_MAP = {
+    SOCKS5AType.IPV4_ADDRESS: AddressType.IPV4,
+    SOCKS5AType.DOMAIN_NAME: AddressType.DN,
+    SOCKS5AType.IPV6_ADDRESS: AddressType.IPV6,
+}
 
 
 class SOCKS5ReplyCode(bytes, enum.Enum):
@@ -94,18 +101,40 @@ class SOCKS5Request(typing.NamedTuple):
     port: int
 
     def dumps(self) -> bytes:
-        raise NotImplementedError()
+        return b"".join(
+            [
+                b"\x05",
+                self.command,
+                b"\x00",
+                self.atype,
+                self.addr,
+                (self.port).to_bytes(2, byteorder="big"),
+            ]
+        )
 
 
 class SOCKS5Reply(typing.NamedTuple):
     reply_code: SOCKS5ReplyCode
     atype: SOCKS5AType
-    addr: bytes
+    addr: str
     port: int
 
     @classmethod
     def loads(cls, data: bytes) -> "SOCKS5Reply":
-        raise NotImplementedError()
+        if data[0:1] != b"\x05":
+            raise ProtocolError("Malformed reply")
+
+        try:
+            atype = SOCKS5AType(data[3:4])
+
+            return cls(
+                reply_code=SOCKS5ReplyCode(data[1:2]),
+                atype=atype,
+                addr=decode_address(ATYPE_MAP[atype], data[4:-2]),
+                port=int.from_bytes(data[-2:], byteorder="big"),
+            )
+        except ValueError as exc:
+            raise ProtocolError("Malformed reply") from exc
 
 
 class SOCKS5Datagram(typing.NamedTuple):
@@ -188,8 +217,12 @@ class SOCKS5Connection:
             else:
                 self._state = SOCKS5State.MUST_CLOSE
             return username_password_reply
-        else:
-            raise NotImplementedError()
+
+        if self._state == SOCKS5State.CLIENT_AUTHENTICATED:
+            # TODO: set state to MUST_CLOSE on failure
+            return SOCKS5Reply.loads(data)
+
+        raise NotImplementedError()
 
     def data_to_send(self) -> bytes:
         data = bytes(self._data_to_send)

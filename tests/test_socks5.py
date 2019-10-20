@@ -11,6 +11,26 @@ from socksio import (
     SOCKS5ReplyCode,
 )
 from socksio.socks5 import SOCKS5State
+from socksio.utils import AddressType
+
+
+@pytest.mark.parametrize(
+    "atype,expected",
+    [
+        (AddressType.IPV4, SOCKS5AType.IPV4_ADDRESS),
+        (AddressType.IPV6, SOCKS5AType.IPV6_ADDRESS),
+        (AddressType.DN, SOCKS5AType.DOMAIN_NAME),
+    ],
+)
+def test_socks5atype_from_address_type(
+    atype: AddressType, expected: SOCKS5AType
+) -> None:
+    assert SOCKS5AType.from_atype(atype) == expected
+
+
+def test_socks5atype_unknown_address_type_raises() -> None:
+    with pytest.raises(ValueError):
+        SOCKS5AType.from_atype("FOOBAR")  # type: ignore
 
 
 def test_socks5_auth_request() -> None:

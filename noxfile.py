@@ -2,7 +2,7 @@ import nox
 
 nox.options.stop_on_first_error = True
 
-source_files = ("socks", "tests", "setup.py", "noxfile.py")
+source_files = ("socksio", "tests", "setup.py", "noxfile.py")
 
 
 @nox.session(reuse_venv=True)
@@ -10,8 +10,8 @@ def lint(session):
     session.install("autoflake", "black", "flake8", "isort", "seed-isort-config")
 
     session.run("autoflake", "--in-place", "--recursive", *source_files)
-    session.run("seed-isort-config", "--application-directories=socks")
-    session.run("isort", "--project=socks", "--recursive", "--apply", *source_files)
+    session.run("seed-isort-config", "--application-directories=socksio")
+    session.run("isort", "--project=socksio", "--recursive", "--apply", *source_files)
     session.run("black", "--target-version=py36", *source_files)
 
     check(session)
@@ -25,7 +25,7 @@ def check(session):
 
     session.run("black", "--check", "--diff", "--target-version=py36", *source_files)
     session.run("flake8", *source_files)
-    session.run("mypy", "socks")
+    session.run("mypy", "socksio")
 
 
 @nox.session(python=["3.6", "3.7", "3.8"])

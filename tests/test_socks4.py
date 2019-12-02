@@ -1,6 +1,6 @@
 import pytest
 
-from socks import (
+from socksio import (
     ProtocolError,
     SOCKS4Command,
     SOCKS4Connection,
@@ -26,7 +26,7 @@ def test_socks4_connection_request(command: SOCKS4Command) -> None:
     assert data[13] == 0
 
 
-@pytest.mark.parametrize("request_reply_code", [value for value in SOCKS4ReplyCode])
+@pytest.mark.parametrize("request_reply_code", list(SOCKS4ReplyCode))
 def test_socks4_receive_data(request_reply_code: bytes) -> None:
     conn = SOCKS4Connection(user_id=b"socks")
 

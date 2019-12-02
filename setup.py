@@ -10,17 +10,17 @@ with open(os.path.join(base_dir, "README.md")) as f:
 
 
 setup(
-    name="socks",
+    name="socksio",
     version="0.1",
     author="Seth Michael Larson",
     author_email="sethmichaellarson@gmail.com",
-    url="https://github.com/sethmlarson/socks",
+    url="https://github.com/sethmlarson/socksio",
     description="Sans-I/O implementation of SOCKS4, SOCKS4A, and SOCKS5",
     long_description=long_description,
     long_description_content_type="text/markdown",
     python_requires=">=3.6",
-    package_data={"socks": ["py.typed"]},
-    packages=["socks"],
+    package_data={"socksio": ["py.typed"]},
+    packages=["socksio"],
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3.6",

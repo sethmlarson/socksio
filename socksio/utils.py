@@ -14,7 +14,7 @@ class AddressType(enum.Enum):
 
     @classmethod
     def from_socks5_atype(cls, socks5atype: "SOCKS5AType") -> "AddressType":
-        from socks.socks5 import SOCKS5AType
+        from socksio.socks5 import SOCKS5AType
 
         if socks5atype == SOCKS5AType.IPV4_ADDRESS:
             return AddressType.IPV4

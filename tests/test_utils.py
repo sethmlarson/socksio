@@ -1,7 +1,7 @@
 import pytest
 
-from socks.socks5 import SOCKS5AType
-from socks.utils import AddressType
+from socksio.socks5 import SOCKS5AType
+from socksio.utils import AddressType
 
 
 @pytest.mark.parametrize(

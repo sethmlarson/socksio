@@ -1,16 +1,16 @@
 import pytest
 
-from socks import (
+from socksio import (
     ProtocolError,
+    SOCKS5AType,
     SOCKS5AuthMethod,
     SOCKS5AuthReply,
     SOCKS5Command,
     SOCKS5Connection,
     SOCKS5Reply,
     SOCKS5ReplyCode,
-    SOCKS5AType,
 )
-from socks.socks5 import SOCKS5State
+from socksio.socks5 import SOCKS5State
 
 
 def test_socks5_auth_request() -> None:

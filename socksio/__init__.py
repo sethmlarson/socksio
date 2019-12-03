@@ -1,3 +1,5 @@
+"""Sans-I/O implementation of SOCKS4, SOCKS4A, and SOCKS5."""
+
 from .exceptions import ProtocolError, SOCKSError
 from .socks4 import (
     SOCKS4Command,
@@ -17,6 +19,8 @@ from .socks5 import (
     SOCKS5ReplyCode,
     SOCKS5Request,
 )
+
+__version__ = "0.1.0"
 
 __all__ = [
     "SOCKS5Request",

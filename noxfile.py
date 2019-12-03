@@ -2,10 +2,10 @@ import nox
 
 nox.options.stop_on_first_error = True
 
-source_files = ("socksio", "tests", "setup.py", "noxfile.py")
+source_files = ("socksio", "tests", "noxfile.py")
 
 
-@nox.session(reuse_venv=True)
+@nox.session()
 def lint(session):
     session.install("autoflake", "black", "flake8", "isort", "seed-isort-config")
 

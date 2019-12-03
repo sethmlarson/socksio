@@ -1,0 +1,36 @@
+[build-system]
+requires = ["flit_core >=2,<3"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "socksio"
+author = "Seth Michael Larson"
+author-email = "sethmichaellarson@gmail.com"
+home-page = "https://github.com/sethmlarson/socksio"
+requires-python=">=3.6"
+description-file="README.md"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Internet :: Proxy Servers",
+]
+
+[tool.mypy]
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.isort]
+combine_as_imports = true
+force_grid_wrap = 0
+include_trailing_comma = true
+known_first_party = "socks,tests"
+known_third_party = "nox,pytest,setuptools"
+line_length = 88
+multi_line_output = 3
+
+[tool.pytest]
+addopts = "--cov=socks --cov=tests --cov-report=term-missing"

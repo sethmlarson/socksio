@@ -23,12 +23,15 @@ class SOCKS5AType(bytes, enum.Enum):
     DOMAIN_NAME = b"\x03"
     IPV6_ADDRESS = b"\x04"
 
-
-ATYPE_MAP = {
-    SOCKS5AType.IPV4_ADDRESS: AddressType.IPV4,
-    SOCKS5AType.DOMAIN_NAME: AddressType.DN,
-    SOCKS5AType.IPV6_ADDRESS: AddressType.IPV6,
-}
+    @classmethod
+    def from_atype(cls, atype: AddressType) -> "SOCKS5AType":
+        if atype == AddressType.IPV4:
+            return SOCKS5AType.IPV4_ADDRESS
+        elif atype == AddressType.DN:
+            return SOCKS5AType.DOMAIN_NAME
+        elif atype == AddressType.IPV6:
+            return SOCKS5AType.IPV6_ADDRESS
+        raise ValueError(atype)
 
 
 class SOCKS5ReplyCode(bytes, enum.Enum):
@@ -130,7 +133,7 @@ class SOCKS5Reply(typing.NamedTuple):
             return cls(
                 reply_code=SOCKS5ReplyCode(data[1:2]),
                 atype=atype,
-                addr=decode_address(ATYPE_MAP[atype], data[4:-2]),
+                addr=decode_address(AddressType.from_socks5_atype(atype), data[4:-2]),
                 port=int.from_bytes(data[-2:], byteorder="big"),
             )
         except ValueError as exc:
@@ -148,10 +151,10 @@ class SOCKS5Datagram(typing.NamedTuple):
 
     @classmethod
     def loads(cls, data: bytes) -> "SOCKS5Datagram":
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: nocover
 
     def dumps(self) -> bytes:
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: nocover
 
 
 class SOCKS5State(enum.IntEnum):
@@ -170,6 +173,10 @@ class SOCKS5Connection:
         self._received_data = bytearray()
         self._state = SOCKS5State.CLIENT_AUTH_REQUIRED
 
+    @property
+    def state(self) -> SOCKS5State:
+        return self._state
+
     def authenticate(self, methods: typing.List[SOCKS5AuthMethod]) -> None:
         auth_request = SOCKS5AuthRequest(methods)
         self._data_to_send += auth_request.dumps()
@@ -187,17 +194,12 @@ class SOCKS5Connection:
             raise ProtocolError(
                 "SOCKS5 connections must be authenticated before sending a request"
             )
-        address_type, encoded_addr = encode_address(addr)
-        if address_type == AddressType.IPV4:
-            atype = SOCKS5AType.IPV4_ADDRESS
-        elif address_type == AddressType.IPV6:
-            atype = SOCKS5AType.IPV6_ADDRESS
-        else:
-            assert address_type == AddressType.DN
-            atype = SOCKS5AType.DOMAIN_NAME
-
+        atype, encoded_addr = encode_address(addr)
         request = SOCKS5Request(
-            command=command, atype=atype, addr=encoded_addr, port=port
+            command=command,
+            atype=SOCKS5AType.from_atype(atype),
+            addr=encoded_addr,
+            port=port,
         )
         self._data_to_send += request.dumps()
 
@@ -219,10 +221,15 @@ class SOCKS5Connection:
             return username_password_reply
 
         if self._state == SOCKS5State.CLIENT_AUTHENTICATED:
-            # TODO: set state to MUST_CLOSE on failure
-            return SOCKS5Reply.loads(data)
+            reply = SOCKS5Reply.loads(data)
+            if reply.reply_code == SOCKS5ReplyCode.SUCCEEDED:
+                self._state = SOCKS5State.TUNNEL_READY
+            else:
+                self._state = SOCKS5State.MUST_CLOSE
 
-        raise NotImplementedError()
+            return reply
+
+        raise NotImplementedError()  # pragma: nocover
 
     def data_to_send(self) -> bytes:
         data = bytes(self._data_to_send)

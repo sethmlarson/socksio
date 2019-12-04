@@ -3,11 +3,26 @@ import functools
 import socket
 import typing
 
+if typing.TYPE_CHECKING:
+    from socks.socks5 import SOCKS5AType  # pragma: nocover
+
 
 class AddressType(enum.Enum):
     IPV4 = "IPV4"
     IPV6 = "IPV6"
     DN = "DN"
+
+    @classmethod
+    def from_socks5_atype(cls, socks5atype: "SOCKS5AType") -> "AddressType":
+        from socksio.socks5 import SOCKS5AType
+
+        if socks5atype == SOCKS5AType.IPV4_ADDRESS:
+            return AddressType.IPV4
+        elif socks5atype == SOCKS5AType.DOMAIN_NAME:
+            return AddressType.DN
+        elif socks5atype == SOCKS5AType.IPV6_ADDRESS:
+            return AddressType.IPV6
+        raise ValueError(socks5atype)
 
 
 @functools.lru_cache(maxsize=64)

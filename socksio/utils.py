@@ -4,7 +4,7 @@ import socket
 import typing
 
 if typing.TYPE_CHECKING:
-    from socks.socks5 import SOCKS5AType  # pragma: nocover
+    from socksio.socks5 import SOCKS5AType  # pragma: nocover
 
 
 class AddressType(enum.Enum):

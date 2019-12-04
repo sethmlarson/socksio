@@ -13,6 +13,8 @@ Each implementation follows the documents as listed below:
 
 Install the test requirements with `pip install -r test-requirements.txt`.
 
+Install the project in pseudo-editable mode with `flit install -s .`.
+
 Tests can be ran directly invoking `pytest`.
 
 This project uses [`nox`](https://nox.thea.codes/en/stable/) to automate

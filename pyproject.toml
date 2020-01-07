@@ -27,10 +27,7 @@ ignore_missing_imports = true
 combine_as_imports = true
 force_grid_wrap = 0
 include_trailing_comma = true
-known_first_party = "socks,tests"
+known_first_party = "socksio,tests"
 known_third_party = "nox,pytest,setuptools"
 line_length = 88
 multi_line_output = 3
-
-[tool.pytest]
-addopts = "--cov=socks --cov=tests --cov-report=term-missing"

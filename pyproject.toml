@@ -19,10 +19,6 @@ classifiers = [
     "Topic :: Internet :: Proxy Servers",
 ]
 
-[tool.mypy]
-disallow_untyped_defs = true
-ignore_missing_imports = true
-
 [tool.isort]
 combine_as_imports = true
 force_grid_wrap = 0

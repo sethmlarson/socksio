@@ -100,7 +100,7 @@ def test_socks5_auth_username_password_success() -> None:
     conn.receive_data(b"\x05" + SOCKS5AuthMethod.USERNAME_PASSWORD)
     conn.authenticate_username_password(b"username", b"password")
     assert conn.data_to_send() == b"\x01\x08username\x08password"
-    conn.receive_data(b"\x00")
+    conn.receive_data(b"\x01\x00")
     assert conn.state == SOCKS5State.CLIENT_AUTHENTICATED
 
 
@@ -129,7 +129,7 @@ def authenticated_conn() -> SOCKS5Connection:
     conn.receive_data(b"\x05" + SOCKS5AuthMethod.USERNAME_PASSWORD)
     conn.authenticate_username_password(b"username", b"password")
     conn.data_to_send()
-    conn.receive_data(b"\x00")
+    conn.receive_data(b"\x01\x00")
     return conn
 
 

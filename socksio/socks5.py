@@ -94,7 +94,7 @@ class SOCKS5UsernamePasswordReply(typing.NamedTuple):
 
     @classmethod
     def loads(cls, data: bytes) -> "SOCKS5UsernamePasswordReply":
-        return cls(success=data == b"\x00")
+        return cls(success=data == b"\x01\x00")
 
 
 class SOCKS5Request(typing.NamedTuple):

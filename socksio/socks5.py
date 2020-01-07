@@ -110,10 +110,22 @@ class SOCKS5Request(typing.NamedTuple):
                 self.command,
                 b"\x00",
                 self.atype,
-                self.addr,
+                self.packed_addr,
                 (self.port).to_bytes(2, byteorder="big"),
             ]
         )
+
+    @property
+    def packed_addr(self):
+        if self.atype == SOCKS5AType.IPV4_ADDRESS:
+            assert len(self.addr) == 4
+            return self.addr
+        elif self.atype == SOCKS5AType.IPV6_ADDRESS:
+            assert len(self.addr) == 16
+            return self.addr
+        elif self.atype == SOCKS5AType.DOMAIN_NAME:
+            length = len(self.addr)
+            return length.to_bytes(1, byteorder="big") + self.addr
 
 
 class SOCKS5Reply(typing.NamedTuple):

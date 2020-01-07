@@ -158,13 +158,14 @@ def test_socks5_request_domain_name(
 
     data = authenticated_conn.data_to_send()
 
-    assert len(data) == 15
+    assert len(data) == 16
     assert data[0:1] == b"\x05"
     assert data[1:2] == command
     assert data[2:3] == b"\x00"
     assert data[3:4] == b"\x03"
-    assert data[4:13] == b"localhost"
-    assert data[13:] == (1080).to_bytes(2, byteorder="big")
+    assert data[4:5] == (9).to_bytes(1, byteorder="big")
+    assert data[5:14] == b"localhost"
+    assert data[14:] == (1080).to_bytes(2, byteorder="big")
 
 
 @pytest.mark.parametrize("command", (SOCKS5Command.CONNECT, SOCKS5Command.BIND))

@@ -222,6 +222,8 @@ class SOCKS5Connection:
             auth_reply = SOCKS5AuthReply.loads(data)
             if auth_reply.method == SOCKS5AuthMethod.USERNAME_PASSWORD:
                 self._state = SOCKS5State.CLIENT_WAITING_FOR_USERNAME_PASSWORD
+            elif auth_reply.method == SOCKS5AuthMethod.NO_AUTH_REQUIRED:
+                self._state = SOCKS5State.CLIENT_AUTHENTICATED
             return auth_reply
 
         if self._state == SOCKS5State.SERVER_VERIFY_USERNAME_PASSWORD:

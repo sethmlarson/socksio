@@ -87,6 +87,20 @@ def test_socks5_auth_reply_malformed(data: bytes) -> None:
         conn.receive_data(data)
 
 
+def test_socks5_no_auth_required_reply_sets_client_authenticated_state() -> None:
+    conn = SOCKS5Connection()
+    request_methods = [
+        SOCKS5AuthMethod.NO_AUTH_REQUIRED,
+        SOCKS5AuthMethod.USERNAME_PASSWORD,
+        SOCKS5AuthMethod.GSSAPI,
+    ]
+
+    conn.authenticate(request_methods)
+    _ = conn.receive_data(b"\x05" + SOCKS5AuthMethod.NO_AUTH_REQUIRED)
+
+    assert conn.state == SOCKS5State.CLIENT_AUTHENTICATED
+
+
 def test_socks5_auth_username_password_requires_connect_waiting() -> None:
     conn = SOCKS5Connection()
     with pytest.raises(ProtocolError):

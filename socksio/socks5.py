@@ -94,7 +94,7 @@ class SOCKS5UsernamePasswordReply(typing.NamedTuple):
 
     @classmethod
     def loads(cls, data: bytes) -> "SOCKS5UsernamePasswordReply":
-        return cls(success=data == b"\x00")
+        return cls(success=data == b"\x01\x00")
 
 
 class SOCKS5Request(typing.NamedTuple):
@@ -222,6 +222,8 @@ class SOCKS5Connection:
             auth_reply = SOCKS5AuthReply.loads(data)
             if auth_reply.method == SOCKS5AuthMethod.USERNAME_PASSWORD:
                 self._state = SOCKS5State.CLIENT_WAITING_FOR_USERNAME_PASSWORD
+            elif auth_reply.method == SOCKS5AuthMethod.NO_AUTH_REQUIRED:
+                self._state = SOCKS5State.CLIENT_AUTHENTICATED
             return auth_reply
 
         if self._state == SOCKS5State.SERVER_VERIFY_USERNAME_PASSWORD:

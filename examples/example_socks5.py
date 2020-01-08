@@ -1,5 +1,4 @@
 import socket
-import socksio
 from socksio import socks5
 
 
@@ -17,7 +16,7 @@ def receive_data(sock):
 def main():
     # Assuming a running SOCKS5 proxy running in localhost:8080
     sock = socket.create_connection(("localhost", 8080))
-    conn = socksio.socks5.SOCKS5Connection()
+    conn = socks5.SOCKS5Connection()
 
     # The proxy may return any of these options
     conn.authenticate(

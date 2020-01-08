@@ -1,8 +1,5 @@
 import socket
-import socksio
 from socksio import socks4
-
-MAX_BUFFERSIZE = 1024
 
 
 def send_data(sock, data):
@@ -19,7 +16,7 @@ def receive_data(sock):
 def main():
     # Assuming a running SOCKS4 proxy running in localhost:8080
     sock = socket.create_connection(("localhost", 8080))
-    conn = socksio.socks4.SOCKS4Connection(user_id=b"foo")
+    conn = socks4.SOCKS4Connection(user_id=b"foo")
 
     # Request to connect to google.com port 80
     # SOCKS4 does not allow domain names, below is an IP for google.com

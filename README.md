@@ -2,8 +2,8 @@
 
 [![Build Status](https://travis-ci.org/sethmlarson/socksio.svg?branch=master)](https://travis-ci.org/sethmlarson/socksio)
 [![codecov](https://codecov.io/gh/sethmlarson/socksio/branch/master/graph/badge.svg)](https://codecov.io/gh/sethmlarson/socksio)
-[![Supported Python Versions](https://img.shields.io/pypi/pyversions/lunr.svg)](https://pypi.org/project/lunr/)
-[![PyPI](https://img.shields.io/pypi/v/lunr.svg)](https://pypi.org/project/lunr/)
+[![Supported Python Versions](https://img.shields.io/pypi/pyversions/lunr.svg)](https://pypi.org/project/lunr)
+[![PyPI](https://img.shields.io/pypi/v/socksio.svg)](https://pypi.org/project/socksio)
 
 Client-side sans-I/O SOCKS proxy implementation.
 Supports SOCKS4, SOCKS4A, and SOCKS5.

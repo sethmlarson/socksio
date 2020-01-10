@@ -25,7 +25,7 @@ def check(session):
 
     session.run("black", "--check", "--diff", "--target-version=py36", *source_files)
     session.run("flake8", *source_files)
-    session.run("mypy", "socksio")
+    session.run("mypy", "--strict", "socksio")
 
 
 @nox.session(python=["3.6", "3.7", "3.8"])

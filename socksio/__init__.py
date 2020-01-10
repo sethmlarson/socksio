@@ -20,7 +20,7 @@ from .socks5 import (
     SOCKS5Request,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
     "SOCKS5Request",

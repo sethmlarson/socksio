@@ -15,6 +15,15 @@ does not handle the actual sending of the bytes through the network, it only
 deals with the implementation details of the SOCKS protocols so you can use
 it in any I/O library you want.
 
+## Current status: alpha
+
+The API is not final and may be subject to change.
+
+Features not yet implemented:
+
+- SOCKS5 GSS-API authentication.
+- SOCKS5 UDP associate requests.
+
 ## Usage
 
 TL;DR check the [examples directory](examples/).

@@ -274,6 +274,8 @@ class SOCKS5Connection:
         raise NotImplementedError()  # pragma: nocover
 
     def data_to_send(self) -> bytes:
+        """Returns the data to be sent via the I/O library of choice clearing
+        the connection's buffer."""
         data = bytes(self._data_to_send)
         self._data_to_send = bytearray()
         return data

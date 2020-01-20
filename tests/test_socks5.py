@@ -11,7 +11,6 @@ from socksio import (
     SOCKS5Connection,
     SOCKS5Reply,
     SOCKS5ReplyCode,
-    SOCKS5AuthMethodsRequest,
     SOCKS5UsernamePasswordRequest,
 )
 from socksio.socks5 import SOCKS5State
@@ -170,31 +169,39 @@ def test_socks5_auth_username_password_fail() -> None:
     assert conn.state == SOCKS5State.MUST_CLOSE
 
 
-@pytest.mark.skip("Refactoring")
 def test_socks5_request_require_authentication() -> None:
     conn = SOCKS5Connection()
+    cmd_request = SOCKS5CommandRequest.from_address_port(
+        SOCKS5Command.CONNECT, "127.0.0.1:1080"
+    )
     with pytest.raises(ProtocolError):
-        conn.request(SOCKS5Command.CONNECT, addr="127.0.0.1", port=1080)
+        conn.send(cmd_request)
 
 
 @pytest.fixture
 def authenticated_conn() -> SOCKS5Connection:
     conn = SOCKS5Connection()
-    conn.authenticate([SOCKS5AuthMethod.USERNAME_PASSWORD])
+    auth_methods_request = SOCKS5AuthMethodsRequest(
+        [SOCKS5AuthMethod.USERNAME_PASSWORD]
+    )
+    conn.send(auth_methods_request)
     conn.data_to_send()
     conn.receive_data(b"\x05" + SOCKS5AuthMethod.USERNAME_PASSWORD)
-    conn.authenticate_username_password(b"username", b"password")
-    conn.data_to_send()
+    auth_request = SOCKS5UsernamePasswordRequest(
+        username=b"username", password=b"password"
+    )
+    conn.send(auth_request)
     conn.receive_data(b"\x01\x00")
+    _ = conn.data_to_send()  # purge the buffer for further tests
     return conn
 
 
-@pytest.mark.skip("Refactoring")
 @pytest.mark.parametrize("command", (SOCKS5Command.CONNECT, SOCKS5Command.BIND))
 def test_socks5_request_ipv4(
     authenticated_conn: SOCKS5Connection, command: SOCKS5Command
 ) -> None:
-    authenticated_conn.request(command, addr="127.0.0.1", port=1080)
+    cmd_request = SOCKS5CommandRequest.from_address_port(command, "127.0.0.1:1080")
+    authenticated_conn.send(cmd_request)
 
     data = authenticated_conn.data_to_send()
 
@@ -207,12 +214,14 @@ def test_socks5_request_ipv4(
     assert data[8:] == (1080).to_bytes(2, byteorder="big")
 
 
-@pytest.mark.skip("Refactoring")
 @pytest.mark.parametrize("command", (SOCKS5Command.CONNECT, SOCKS5Command.BIND))
 def test_socks5_request_domain_name(
     authenticated_conn: SOCKS5Connection, command: SOCKS5Command
 ) -> None:
-    authenticated_conn.request(command, addr="localhost", port=1080)
+    cmd_request = SOCKS5CommandRequest.from_address_port(
+        command, "localhost", port=1080
+    )
+    authenticated_conn.send(cmd_request)
 
     data = authenticated_conn.data_to_send()
 
@@ -226,12 +235,14 @@ def test_socks5_request_domain_name(
     assert data[14:] == (1080).to_bytes(2, byteorder="big")
 
 
-@pytest.mark.skip("Refactoring")
 @pytest.mark.parametrize("command", (SOCKS5Command.CONNECT, SOCKS5Command.BIND))
 def test_socks5_request_ipv6(
     authenticated_conn: SOCKS5Connection, command: SOCKS5Command
 ) -> None:
-    authenticated_conn.request(command, addr="0:0:0:0:0:0:0:1", port=1080)
+    cmd_request = SOCKS5CommandRequest.from_address_port(
+        command, address="0:0:0:0:0:0:0:1", port=1080
+    )
+    authenticated_conn.send(cmd_request)
 
     data = authenticated_conn.data_to_send()
 
@@ -247,7 +258,6 @@ def test_socks5_request_ipv6(
     assert data[20:] == (1080).to_bytes(2, byteorder="big")
 
 
-@pytest.mark.skip("Refactoring")
 @pytest.mark.parametrize(
     "atype,addr,expected_atype,expected_addr",
     [
@@ -289,7 +299,6 @@ def test_socks5_reply_success(
     )
 
 
-@pytest.mark.skip("Refactoring")
 @pytest.mark.parametrize(
     "data",
     [
@@ -305,7 +314,6 @@ def test_socks5_receive_malformed_data(
         authenticated_conn.receive_data(data)
 
 
-@pytest.mark.skip("Refactoring")
 @pytest.mark.parametrize("error_code", list(SOCKS5ReplyCode)[1:])
 @pytest.mark.parametrize(
     "atype,addr,expected_atype,expected_addr",

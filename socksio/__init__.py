@@ -11,23 +11,23 @@ from .socks4 import (
 from .socks5 import (
     SOCKS5AType,
     SOCKS5AuthMethod,
+    SOCKS5AuthMethodsRequest,
     SOCKS5AuthReply,
-    SOCKS5AuthRequest,
     SOCKS5Command,
+    SOCKS5CommandRequest,
     SOCKS5Connection,
     SOCKS5Reply,
     SOCKS5ReplyCode,
-    SOCKS5Request,
 )
 
 __version__ = "0.1.1"
 
 __all__ = [
-    "SOCKS5Request",
     "SOCKS5ReplyCode",
     "SOCKS5Connection",
     "SOCKS5Command",
-    "SOCKS5AuthRequest",
+    "SOCKS5CommandRequest",
+    "SOCKS5AuthMethodsRequest",
     "SOCKS5AuthReply",
     "SOCKS5AuthMethod",
     "SOCKS5AType",

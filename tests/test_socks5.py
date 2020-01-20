@@ -4,12 +4,15 @@ from socksio import (
     ProtocolError,
     SOCKS5AType,
     SOCKS5AuthMethod,
+    SOCKS5AuthMethodsRequest,
     SOCKS5AuthReply,
     SOCKS5Command,
     SOCKS5CommandRequest,
     SOCKS5Connection,
     SOCKS5Reply,
     SOCKS5ReplyCode,
+    SOCKS5AuthMethodsRequest,
+    SOCKS5UsernamePasswordRequest,
 )
 from socksio.socks5 import SOCKS5State
 from socksio.utils import AddressType
@@ -52,12 +55,12 @@ def test_socks5commandrequest_from_address_port(
     assert cmd.port == expected_port
 
 
-@pytest.mark.skip("Refactoring")
 def test_socks5_auth_request() -> None:
     conn = SOCKS5Connection()
     auth_methods = [SOCKS5AuthMethod.GSSAPI, SOCKS5AuthMethod.USERNAME_PASSWORD]
+    auth_request = SOCKS5AuthMethodsRequest(auth_methods)
 
-    conn.authenticate(auth_methods)
+    conn.send(auth_request)
 
     data = conn.data_to_send()
     assert len(data) == 4
@@ -67,7 +70,6 @@ def test_socks5_auth_request() -> None:
     assert data[3:] == SOCKS5AuthMethod.USERNAME_PASSWORD
 
 
-@pytest.mark.skip("Refactoring")
 @pytest.mark.parametrize(
     "auth_method",
     [
@@ -78,79 +80,91 @@ def test_socks5_auth_request() -> None:
 )
 def test_socks5_auth_reply_accepted(auth_method: SOCKS5AuthMethod) -> None:
     conn = SOCKS5Connection()
-    request_methods = [
+    auth_methods = [
         SOCKS5AuthMethod.NO_AUTH_REQUIRED,
         SOCKS5AuthMethod.USERNAME_PASSWORD,
         SOCKS5AuthMethod.GSSAPI,
     ]
+    auth_request = SOCKS5AuthMethodsRequest(auth_methods)
 
-    conn.authenticate(request_methods)
+    conn.send(auth_request)
     reply = conn.receive_data(b"\x05" + auth_method)
 
     assert reply == SOCKS5AuthReply(method=auth_method)
 
 
-@pytest.mark.skip("Refactoring")
 def test_socks5_auth_reply_no_acceptable_auth_method() -> None:
     conn = SOCKS5Connection()
-    conn.authenticate([SOCKS5AuthMethod.USERNAME_PASSWORD])
+    auth_request = SOCKS5AuthMethodsRequest([SOCKS5AuthMethod.USERNAME_PASSWORD])
+    conn.send(auth_request)
     reply = conn.receive_data(b"\x05\xFF")
 
     assert reply == SOCKS5AuthReply(method=SOCKS5AuthMethod.NO_ACCEPTABLE_METHODS)
 
 
-@pytest.mark.skip("Refactoring")
 @pytest.mark.parametrize(
     "data", [b"\x05", b"\x05\x10"]  # missing method byte , incorrect method value
 )
 def test_socks5_auth_reply_malformed(data: bytes) -> None:
     conn = SOCKS5Connection()
-    conn.authenticate([SOCKS5AuthMethod.USERNAME_PASSWORD])
+    auth_request = SOCKS5AuthMethodsRequest([SOCKS5AuthMethod.USERNAME_PASSWORD])
+    conn.send(auth_request)
     with pytest.raises(ProtocolError):
         conn.receive_data(data)
 
 
-@pytest.mark.skip("Refactoring")
 def test_socks5_no_auth_required_reply_sets_client_authenticated_state() -> None:
     conn = SOCKS5Connection()
-    request_methods = [
+    auth_methods = [
         SOCKS5AuthMethod.NO_AUTH_REQUIRED,
         SOCKS5AuthMethod.USERNAME_PASSWORD,
         SOCKS5AuthMethod.GSSAPI,
     ]
-
-    conn.authenticate(request_methods)
+    auth_request = SOCKS5AuthMethodsRequest(auth_methods)
+    conn.send(auth_request)
     _ = conn.receive_data(b"\x05" + SOCKS5AuthMethod.NO_AUTH_REQUIRED)
 
     assert conn.state == SOCKS5State.CLIENT_AUTHENTICATED
 
 
-@pytest.mark.skip("Refactoring")
 def test_socks5_auth_username_password_requires_connect_waiting() -> None:
     conn = SOCKS5Connection()
+    auth_request = SOCKS5UsernamePasswordRequest(username=b"user", password=b"pass")
     with pytest.raises(ProtocolError):
-        conn.authenticate_username_password(b"username", b"password")
+        conn.send(auth_request)
 
 
-@pytest.mark.skip("Refactoring")
 def test_socks5_auth_username_password_success() -> None:
     conn = SOCKS5Connection()
-    conn.authenticate([SOCKS5AuthMethod.USERNAME_PASSWORD])
+    auth_methods_request = SOCKS5AuthMethodsRequest(
+        [SOCKS5AuthMethod.USERNAME_PASSWORD]
+    )
+    conn.send(auth_methods_request)
     conn.data_to_send()
     conn.receive_data(b"\x05" + SOCKS5AuthMethod.USERNAME_PASSWORD)
-    conn.authenticate_username_password(b"username", b"password")
+    auth_request = SOCKS5UsernamePasswordRequest(
+        username=b"username", password=b"password"
+    )
+    conn.send(auth_request)
+
     assert conn.data_to_send() == b"\x01\x08username\x08password"
     conn.receive_data(b"\x01\x00")
     assert conn.state == SOCKS5State.CLIENT_AUTHENTICATED
 
 
-@pytest.mark.skip("Refactoring")
 def test_socks5_auth_username_password_fail() -> None:
     conn = SOCKS5Connection()
-    conn.authenticate([SOCKS5AuthMethod.USERNAME_PASSWORD])
+    auth_methods_request = SOCKS5AuthMethodsRequest(
+        [SOCKS5AuthMethod.USERNAME_PASSWORD]
+    )
+    conn.send(auth_methods_request)
     conn.data_to_send()
     conn.receive_data(b"\x05" + SOCKS5AuthMethod.USERNAME_PASSWORD)
-    conn.authenticate_username_password(b"username", b"password")
+    auth_request = SOCKS5UsernamePasswordRequest(
+        username=b"username", password=b"password"
+    )
+    conn.send(auth_request)
+
     assert conn.data_to_send() == b"\x01\x08username\x08password"
     conn.receive_data(b"\x01")
     assert conn.state == SOCKS5State.MUST_CLOSE

@@ -18,25 +18,27 @@ from .socks5 import (
     SOCKS5Connection,
     SOCKS5Reply,
     SOCKS5ReplyCode,
+    SOCKS5UsernamePasswordRequest,
 )
 
 __version__ = "0.1.1"
 
 __all__ = [
-    "SOCKS5ReplyCode",
-    "SOCKS5Connection",
-    "SOCKS5Command",
-    "SOCKS5CommandRequest",
-    "SOCKS5AuthMethodsRequest",
-    "SOCKS5AuthReply",
-    "SOCKS5AuthMethod",
-    "SOCKS5AType",
-    "SOCKS5Reply",
     "SOCKS4Request",
     "SOCKS4Reply",
     "SOCKS4Connection",
     "SOCKS4Command",
     "SOCKS4ReplyCode",
+    "SOCKS5AType",
+    "SOCKS5AuthMethodsRequest",
+    "SOCKS5AuthReply",
+    "SOCKS5AuthMethod",
+    "SOCKS5Connection",
+    "SOCKS5Command",
+    "SOCKS5CommandRequest",
+    "SOCKS5ReplyCode",
+    "SOCKS5Reply",
+    "SOCKS5UsernamePasswordRequest",
     "SOCKSError",
     "ProtocolError",
 ]

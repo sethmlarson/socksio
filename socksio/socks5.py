@@ -3,7 +3,7 @@ import typing
 
 from .exceptions import ProtocolError
 from .utils import AddressType, decode_address, encode_address
-from .singledispatchmethod import singledispatchmethod
+from .compat import singledispatchmethod
 
 
 class SOCKS5AuthMethod(bytes, enum.Enum):

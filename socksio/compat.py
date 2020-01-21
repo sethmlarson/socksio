@@ -30,9 +30,13 @@ else:
         def register(
             self,
             cls: typing.Callable,
-            method: typing.Callable[[typing.Any], typing.Any],
+            method: typing.Optional[typing.Callable[..., typing.Any]] = None,
         ) -> typing.Callable:
-            return self.dispatcher.register(cls, func=method)
+            # mypy wants method to be non-optional, but it is required to be
+            # for decoration to work correctly in our case.
+            # https://github.com/python/cpython/blob/3.8/Lib/functools.py#L887-L920
+            # is not type annotated either.
+            return self.dispatcher.register(cls, func=method)  # type: ignore
 
         def __get__(
             self, obj: typing.Any, cls: typing.Callable[[typing.Any], typing.Any]

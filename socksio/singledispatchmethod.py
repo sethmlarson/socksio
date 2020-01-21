@@ -5,16 +5,18 @@ removing 2.7 specific code.
 """
 
 import functools
-import sys
 
 
-if sys.version_info >= (3, 8):
+if hasattr(functools, "singledispatchmethod"):
     singledispatchmethod = functools.singledispatchmethod
 else:
     update_wrapper = functools.update_wrapper
     singledispatch = functools.singledispatch
 
-    class singledispatchmethod(object):
+    # The type: ignore below is to avoid mypy erroring due to a
+    # "already defined" singledispatchmethod, oddly this does not
+    # happen when using `if sys.version_info >= (3, 8)`
+    class singledispatchmethod(object):  # type: ignore
         """Single-dispatch generic method descriptor."""
 
         def __init__(self, func):

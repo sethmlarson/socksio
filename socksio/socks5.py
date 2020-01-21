@@ -221,7 +221,7 @@ class SOCKS5Connection:
 
     @singledispatchmethod
     def send(self, request: SOCKS5RequestType) -> None:
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @send.register
     def _auth_methods(self, request: SOCKS5AuthMethodsRequest) -> None:

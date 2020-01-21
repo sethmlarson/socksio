@@ -105,22 +105,26 @@ class SOCKS5CommandRequest(typing.NamedTuple):
     port: int
 
     @classmethod
-    def from_address_port(
-        cls, command: SOCKS5Command, address: str, port: typing.Optional[int] = None
+    def from_address(
+        cls, command: SOCKS5Command, address: typing.Union[str, typing.Tuple[str, int]]
     ) -> "SOCKS5CommandRequest":
         """Convenience method for creating command requests from
-        standard address strings in the form of '127.0.0.1:3080'
+        standard address strings in the form of '127.0.0.1:3080'.
         """
-        if port is None:
+        if isinstance(address, str):
             try:
                 address, str_port = address.split(":")
                 port = int(str_port)
             except ValueError:
                 raise ValueError(
-                    "Port missing, please supply a port integer manually"
-                    "or include it in the address parameter as a suffix"
-                    "`127.0.0.1:3080`"
+                    "Port missing, please supply a port integer manually "
+                    "or include it in the address parameter as a suffix "
+                    "`127.0.0.1:3080` or `[0:0:0:0:0:0:0:1]:3080`"
                 ) from None
+        else:
+            address, port = address
+            if isinstance(port, str):
+                port = int(port)
 
         atype, encoded_addr = encode_address(address)
         return cls(
@@ -221,7 +225,7 @@ class SOCKS5Connection:
 
     @singledispatchmethod
     def send(self, request: SOCKS5RequestType) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: nocover
 
     @send.register(SOCKS5AuthMethodsRequest)
     def _auth_methods(self, request: SOCKS5AuthMethodsRequest) -> None:

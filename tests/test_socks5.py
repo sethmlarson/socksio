@@ -37,16 +37,17 @@ def test_socks5atype_unknown_address_type_raises() -> None:
 
 
 @pytest.mark.parametrize(
-    "address,port,expected_address,expected_port",
+    "address,expected_address,expected_port",
     [
-        ("127.0.0.1", 3080, b"\x7f\x00\x00\x01", 3080),
-        ("127.0.0.1:8080", None, b"\x7f\x00\x00\x01", 8080),
+        (("127.0.0.1", 3080), b"\x7f\x00\x00\x01", 3080),
+        (("127.0.0.1", "3080"), b"\x7f\x00\x00\x01", 3080),
+        ("127.0.0.1:8080", b"\x7f\x00\x00\x01", 8080),
     ],
 )
-def test_socks5commandrequest_from_address_port(
-    address, port, expected_address, expected_port
+def test_socks5commandrequest_from_address(
+    address, expected_address, expected_port
 ) -> None:
-    cmd = SOCKS5CommandRequest.from_address_port(SOCKS5Command.CONNECT, address, port)
+    cmd = SOCKS5CommandRequest.from_address(SOCKS5Command.CONNECT, address)
 
     assert cmd.command == SOCKS5Command.CONNECT
     assert cmd.atype == SOCKS5AType.IPV4_ADDRESS
@@ -171,7 +172,7 @@ def test_socks5_auth_username_password_fail() -> None:
 
 def test_socks5_request_require_authentication() -> None:
     conn = SOCKS5Connection()
-    cmd_request = SOCKS5CommandRequest.from_address_port(
+    cmd_request = SOCKS5CommandRequest.from_address(
         SOCKS5Command.CONNECT, "127.0.0.1:1080"
     )
     with pytest.raises(ProtocolError):
@@ -200,7 +201,7 @@ def authenticated_conn() -> SOCKS5Connection:
 def test_socks5_request_ipv4(
     authenticated_conn: SOCKS5Connection, command: SOCKS5Command
 ) -> None:
-    cmd_request = SOCKS5CommandRequest.from_address_port(command, "127.0.0.1:1080")
+    cmd_request = SOCKS5CommandRequest.from_address(command, "127.0.0.1:1080")
     authenticated_conn.send(cmd_request)
 
     data = authenticated_conn.data_to_send()
@@ -218,9 +219,7 @@ def test_socks5_request_ipv4(
 def test_socks5_request_domain_name(
     authenticated_conn: SOCKS5Connection, command: SOCKS5Command
 ) -> None:
-    cmd_request = SOCKS5CommandRequest.from_address_port(
-        command, "localhost", port=1080
-    )
+    cmd_request = SOCKS5CommandRequest.from_address(command, "localhost:1080")
     authenticated_conn.send(cmd_request)
 
     data = authenticated_conn.data_to_send()
@@ -239,8 +238,8 @@ def test_socks5_request_domain_name(
 def test_socks5_request_ipv6(
     authenticated_conn: SOCKS5Connection, command: SOCKS5Command
 ) -> None:
-    cmd_request = SOCKS5CommandRequest.from_address_port(
-        command, address="0:0:0:0:0:0:0:1", port=1080
+    cmd_request = SOCKS5CommandRequest.from_address(
+        command, address="[0:0:0:0:0:0:0:1]:1080"
     )
     authenticated_conn.send(cmd_request)
 

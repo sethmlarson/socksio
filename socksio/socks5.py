@@ -115,12 +115,12 @@ class SOCKS5CommandRequest(typing.NamedTuple):
             try:
                 address, str_port = address.split(":")
                 port = int(str_port)
-            except ValueError as exc:
+            except ValueError:
                 raise ValueError(
                     "Port missing, please supply a port integer manually"
                     "or include it in the address parameter as a suffix"
                     "`127.0.0.1:3080`"
-                ) from exc
+                ) from None
 
         atype, encoded_addr = encode_address(address)
         return cls(

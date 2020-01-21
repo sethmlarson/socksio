@@ -32,6 +32,23 @@ else:
             cls: typing.Callable,
             method: typing.Optional[typing.Callable[..., typing.Any]] = None,
         ) -> typing.Callable:
+            """Register a method on a class for a particular type.
+
+            Note in Python <= 3.6 this methods cannot infer the type from the
+            argument's type annotation, users *must* supply it manually on
+            decoration, i.e.
+
+            @my_method.register(TypeToDispatch)
+            def _(self, arg: TypeToDispatch) -> None:
+                ...
+
+            Versus in Python 3.7+:
+
+            @my_method.register
+            def _(self, arg: TypeToDispatch) -> None:
+                ...
+
+            """
             # mypy wants method to be non-optional, but it is required to be
             # for decoration to work correctly in our case.
             # https://github.com/python/cpython/blob/3.8/Lib/functools.py#L887-L920

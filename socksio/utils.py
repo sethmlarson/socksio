@@ -53,7 +53,7 @@ def decode_address(address_type: AddressType, encoded_addr: bytes) -> str:
         return encoded_addr.decode()
 
 
-def unpack_address_string(address: str) -> typing.Tuple[str, int]:
+def split_address_port_from_string(address: str) -> typing.Tuple[str, int]:
     """Returns a tuple (address: str, port: int) from an address string with a port
     i.e. '127.0.0.1:8080', '[0:0:0:0:0:0:0:1]:3080' or 'localhost:8080'.
 

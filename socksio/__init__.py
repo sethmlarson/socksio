@@ -7,6 +7,7 @@ from .socks4 import (
     SOCKS4Reply,
     SOCKS4ReplyCode,
     SOCKS4Request,
+    SOCKS4ARequest,
 )
 from .socks5 import (
     SOCKS5AType,
@@ -25,6 +26,7 @@ __version__ = "0.1.1"
 
 __all__ = [
     "SOCKS4Request",
+    "SOCKS4ARequest",
     "SOCKS4Reply",
     "SOCKS4Connection",
     "SOCKS4Command",

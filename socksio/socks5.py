@@ -223,23 +223,23 @@ class SOCKS5Connection:
     def state(self) -> SOCKS5State:
         return self._state
 
-    @singledispatchmethod
+    @singledispatchmethod  # type: ignore
     def send(self, request: SOCKS5RequestType) -> None:
         raise NotImplementedError()  # pragma: nocover
 
-    @send.register(SOCKS5AuthMethodsRequest)
+    @send.register(SOCKS5AuthMethodsRequest)  # type: ignore
     def _auth_methods(self, request: SOCKS5AuthMethodsRequest) -> None:
         self._data_to_send += request.dumps()
         self._state = SOCKS5State.SERVER_AUTH_REPLY
 
-    @send.register(SOCKS5UsernamePasswordRequest)
+    @send.register(SOCKS5UsernamePasswordRequest)  # type: ignore
     def _auth_username_password(self, request: SOCKS5UsernamePasswordRequest) -> None:
         if self._state != SOCKS5State.CLIENT_WAITING_FOR_USERNAME_PASSWORD:
             raise ProtocolError("Not currently waiting for username and password")
         self._state = SOCKS5State.SERVER_VERIFY_USERNAME_PASSWORD
         self._data_to_send += request.dumps()
 
-    @send.register(SOCKS5CommandRequest)
+    @send.register(SOCKS5CommandRequest)  # type: ignore
     def _command(self, request: SOCKS5AuthMethodsRequest) -> None:
         if self._state < SOCKS5State.CLIENT_AUTHENTICATED:
             raise ProtocolError(

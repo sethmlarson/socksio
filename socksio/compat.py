@@ -9,7 +9,7 @@ import typing
 
 
 if hasattr(functools, "singledispatchmethod"):
-    singledispatchmethod = functools.singledispatchmethod
+    singledispatchmethod = functools.singledispatchmethod  # type: ignore
 else:
     update_wrapper = functools.update_wrapper
     singledispatch = functools.singledispatch
@@ -17,10 +17,21 @@ else:
     # The type: ignore below is to avoid mypy erroring due to a
     # "already defined" singledispatchmethod, oddly this does not
     # happen when using `if sys.version_info >= (3, 8)`
-    class singledispatchmethod(object):  # type: ignore
-        """Single-dispatch generic method descriptor."""
 
-        def __init__(self, func: typing.Callable):
+    class singledispatchmethod(object):  # type: ignore
+        """Single-dispatch generic method descriptor.
+
+        TODO: Figure out how to type this:
+
+        `mypy --strict` returns errors like the following for all decorated methods:
+        "Untyped decorator makes function "send" untyped."
+
+        But this is not a normal function-base decorator, it's a class and it
+        doesn't have a __call__ method. When decorating the "base" method
+        __init__ is called, but of course its return type is None.
+        """
+
+        def __init__(self, func: typing.Callable[..., typing.Any]) -> None:
             if not callable(func) and not hasattr(func, "__get__"):
                 raise TypeError("{!r} is not callable or a descriptor".format(func))
 
@@ -29,9 +40,9 @@ else:
 
         def register(
             self,
-            cls: typing.Callable,
+            cls: typing.Callable[..., typing.Any],
             method: typing.Optional[typing.Callable[..., typing.Any]] = None,
-        ) -> typing.Callable:
+        ) -> typing.Callable[..., typing.Any]:
             """Register a method on a class for a particular type.
 
             Note in Python <= 3.6 this methods cannot infer the type from the
@@ -57,7 +68,7 @@ else:
 
         def __get__(
             self, obj: typing.Any, cls: typing.Callable[[typing.Any], typing.Any]
-        ) -> typing.Callable:
+        ) -> typing.Callable[..., typing.Any]:
             def _method(*args: typing.Any, **kwargs: typing.Any) -> typing.Any:
                 method = self.dispatcher.dispatch(args[0].__class__)  # type: typing.Any
                 return method.__get__(obj, cls)(*args, **kwargs)

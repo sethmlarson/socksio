@@ -37,20 +37,26 @@ def test_socks5atype_unknown_address_type_raises() -> None:
 
 
 @pytest.mark.parametrize(
-    "address,expected_address,expected_port",
+    "address,expected_atype,expected_address,expected_port",
     [
-        (("127.0.0.1", 3080), b"\x7f\x00\x00\x01", 3080),
-        (("127.0.0.1", "3080"), b"\x7f\x00\x00\x01", 3080),
-        ("127.0.0.1:8080", b"\x7f\x00\x00\x01", 8080),
+        (("127.0.0.1", 3080), SOCKS5AType.IPV4_ADDRESS, b"\x7f\x00\x00\x01", 3080),
+        (("127.0.0.1", "3080"), SOCKS5AType.IPV4_ADDRESS, b"\x7f\x00\x00\x01", 3080),
+        ("127.0.0.1:8080", SOCKS5AType.IPV4_ADDRESS, b"\x7f\x00\x00\x01", 8080),
+        (
+            "[0:0:0:0:0:0:0:1]:3080",
+            SOCKS5AType.IPV6_ADDRESS,
+            b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01",
+            3080,
+        ),
     ],
 )
 def test_socks5commandrequest_from_address(
-    address, expected_address, expected_port
+    address, expected_atype, expected_address, expected_port
 ) -> None:
     cmd = SOCKS5CommandRequest.from_address(SOCKS5Command.CONNECT, address)
 
     assert cmd.command == SOCKS5Command.CONNECT
-    assert cmd.atype == SOCKS5AType.IPV4_ADDRESS
+    assert cmd.atype == expected_atype
     assert cmd.addr == expected_address
     assert cmd.port == expected_port
 

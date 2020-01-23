@@ -2,7 +2,12 @@ import enum
 import typing
 
 from .exceptions import ProtocolError
-from .utils import AddressType, decode_address, encode_address
+from .utils import (
+    AddressType,
+    decode_address,
+    encode_address,
+    split_address_port_from_string,
+)
 from .compat import singledispatchmethod
 
 
@@ -112,15 +117,7 @@ class SOCKS5CommandRequest(typing.NamedTuple):
         standard address strings in the form of '127.0.0.1:3080'.
         """
         if isinstance(address, str):
-            try:
-                address, str_port = address.split(":")
-                port = int(str_port)
-            except ValueError:
-                raise ValueError(
-                    "Port missing, please supply a port integer manually "
-                    "or include it in the address parameter as a suffix "
-                    "`127.0.0.1:3080` or `[0:0:0:0:0:0:0:1]:3080`"
-                ) from None
+            address, port = split_address_port_from_string(address)
         else:
             address, port = address
             if isinstance(port, str):

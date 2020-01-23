@@ -37,3 +37,11 @@ def test_split_address_port_from_string(
         expected_address,
         expected_port,
     )
+
+
+@pytest.mark.parametrize(
+    "address_str", ["127.0.0.1", "::1", "127.0.0.1:", "[::1]:foobar"]
+)
+def test_split_address_port_from_string_errors(address_str) -> None:
+    with pytest.raises(ValueError):
+        split_address_port_from_string(address_str)

@@ -4,11 +4,14 @@ from socksio import (
     ProtocolError,
     SOCKS5AType,
     SOCKS5AuthMethod,
+    SOCKS5AuthMethodsRequest,
     SOCKS5AuthReply,
     SOCKS5Command,
+    SOCKS5CommandRequest,
     SOCKS5Connection,
     SOCKS5Reply,
     SOCKS5ReplyCode,
+    SOCKS5UsernamePasswordRequest,
 )
 from socksio.socks5 import SOCKS5State
 from socksio.utils import AddressType
@@ -33,11 +36,37 @@ def test_socks5atype_unknown_address_type_raises() -> None:
         SOCKS5AType.from_atype("FOOBAR")  # type: ignore
 
 
+@pytest.mark.parametrize(
+    "address,expected_atype,expected_address,expected_port",
+    [
+        (("127.0.0.1", 3080), SOCKS5AType.IPV4_ADDRESS, b"\x7f\x00\x00\x01", 3080),
+        (("127.0.0.1", "3080"), SOCKS5AType.IPV4_ADDRESS, b"\x7f\x00\x00\x01", 3080),
+        ("127.0.0.1:8080", SOCKS5AType.IPV4_ADDRESS, b"\x7f\x00\x00\x01", 8080),
+        (
+            "[0:0:0:0:0:0:0:1]:3080",
+            SOCKS5AType.IPV6_ADDRESS,
+            b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01",
+            3080,
+        ),
+    ],
+)
+def test_socks5commandrequest_from_address(
+    address, expected_atype, expected_address, expected_port
+) -> None:
+    cmd = SOCKS5CommandRequest.from_address(SOCKS5Command.CONNECT, address)
+
+    assert cmd.command == SOCKS5Command.CONNECT
+    assert cmd.atype == expected_atype
+    assert cmd.addr == expected_address
+    assert cmd.port == expected_port
+
+
 def test_socks5_auth_request() -> None:
     conn = SOCKS5Connection()
     auth_methods = [SOCKS5AuthMethod.GSSAPI, SOCKS5AuthMethod.USERNAME_PASSWORD]
+    auth_request = SOCKS5AuthMethodsRequest(auth_methods)
 
-    conn.authenticate(auth_methods)
+    conn.send(auth_request)
 
     data = conn.data_to_send()
     assert len(data) == 4
@@ -57,13 +86,14 @@ def test_socks5_auth_request() -> None:
 )
 def test_socks5_auth_reply_accepted(auth_method: SOCKS5AuthMethod) -> None:
     conn = SOCKS5Connection()
-    request_methods = [
+    auth_methods = [
         SOCKS5AuthMethod.NO_AUTH_REQUIRED,
         SOCKS5AuthMethod.USERNAME_PASSWORD,
         SOCKS5AuthMethod.GSSAPI,
     ]
+    auth_request = SOCKS5AuthMethodsRequest(auth_methods)
 
-    conn.authenticate(request_methods)
+    conn.send(auth_request)
     reply = conn.receive_data(b"\x05" + auth_method)
 
     assert reply == SOCKS5AuthReply(method=auth_method)
@@ -71,7 +101,8 @@ def test_socks5_auth_reply_accepted(auth_method: SOCKS5AuthMethod) -> None:
 
 def test_socks5_auth_reply_no_acceptable_auth_method() -> None:
     conn = SOCKS5Connection()
-    conn.authenticate([SOCKS5AuthMethod.USERNAME_PASSWORD])
+    auth_request = SOCKS5AuthMethodsRequest([SOCKS5AuthMethod.USERNAME_PASSWORD])
+    conn.send(auth_request)
     reply = conn.receive_data(b"\x05\xFF")
 
     assert reply == SOCKS5AuthReply(method=SOCKS5AuthMethod.NO_ACCEPTABLE_METHODS)
@@ -82,20 +113,21 @@ def test_socks5_auth_reply_no_acceptable_auth_method() -> None:
 )
 def test_socks5_auth_reply_malformed(data: bytes) -> None:
     conn = SOCKS5Connection()
-    conn.authenticate([SOCKS5AuthMethod.USERNAME_PASSWORD])
+    auth_request = SOCKS5AuthMethodsRequest([SOCKS5AuthMethod.USERNAME_PASSWORD])
+    conn.send(auth_request)
     with pytest.raises(ProtocolError):
         conn.receive_data(data)
 
 
 def test_socks5_no_auth_required_reply_sets_client_authenticated_state() -> None:
     conn = SOCKS5Connection()
-    request_methods = [
+    auth_methods = [
         SOCKS5AuthMethod.NO_AUTH_REQUIRED,
         SOCKS5AuthMethod.USERNAME_PASSWORD,
         SOCKS5AuthMethod.GSSAPI,
     ]
-
-    conn.authenticate(request_methods)
+    auth_request = SOCKS5AuthMethodsRequest(auth_methods)
+    conn.send(auth_request)
     _ = conn.receive_data(b"\x05" + SOCKS5AuthMethod.NO_AUTH_REQUIRED)
 
     assert conn.state == SOCKS5State.CLIENT_AUTHENTICATED
@@ -103,16 +135,24 @@ def test_socks5_no_auth_required_reply_sets_client_authenticated_state() -> None
 
 def test_socks5_auth_username_password_requires_connect_waiting() -> None:
     conn = SOCKS5Connection()
+    auth_request = SOCKS5UsernamePasswordRequest(username=b"user", password=b"pass")
     with pytest.raises(ProtocolError):
-        conn.authenticate_username_password(b"username", b"password")
+        conn.send(auth_request)
 
 
 def test_socks5_auth_username_password_success() -> None:
     conn = SOCKS5Connection()
-    conn.authenticate([SOCKS5AuthMethod.USERNAME_PASSWORD])
+    auth_methods_request = SOCKS5AuthMethodsRequest(
+        [SOCKS5AuthMethod.USERNAME_PASSWORD]
+    )
+    conn.send(auth_methods_request)
     conn.data_to_send()
     conn.receive_data(b"\x05" + SOCKS5AuthMethod.USERNAME_PASSWORD)
-    conn.authenticate_username_password(b"username", b"password")
+    auth_request = SOCKS5UsernamePasswordRequest(
+        username=b"username", password=b"password"
+    )
+    conn.send(auth_request)
+
     assert conn.data_to_send() == b"\x01\x08username\x08password"
     conn.receive_data(b"\x01\x00")
     assert conn.state == SOCKS5State.CLIENT_AUTHENTICATED
@@ -120,10 +160,17 @@ def test_socks5_auth_username_password_success() -> None:
 
 def test_socks5_auth_username_password_fail() -> None:
     conn = SOCKS5Connection()
-    conn.authenticate([SOCKS5AuthMethod.USERNAME_PASSWORD])
+    auth_methods_request = SOCKS5AuthMethodsRequest(
+        [SOCKS5AuthMethod.USERNAME_PASSWORD]
+    )
+    conn.send(auth_methods_request)
     conn.data_to_send()
     conn.receive_data(b"\x05" + SOCKS5AuthMethod.USERNAME_PASSWORD)
-    conn.authenticate_username_password(b"username", b"password")
+    auth_request = SOCKS5UsernamePasswordRequest(
+        username=b"username", password=b"password"
+    )
+    conn.send(auth_request)
+
     assert conn.data_to_send() == b"\x01\x08username\x08password"
     conn.receive_data(b"\x01")
     assert conn.state == SOCKS5State.MUST_CLOSE
@@ -131,19 +178,28 @@ def test_socks5_auth_username_password_fail() -> None:
 
 def test_socks5_request_require_authentication() -> None:
     conn = SOCKS5Connection()
+    cmd_request = SOCKS5CommandRequest.from_address(
+        SOCKS5Command.CONNECT, "127.0.0.1:1080"
+    )
     with pytest.raises(ProtocolError):
-        conn.request(SOCKS5Command.CONNECT, addr="127.0.0.1", port=1080)
+        conn.send(cmd_request)
 
 
 @pytest.fixture
 def authenticated_conn() -> SOCKS5Connection:
     conn = SOCKS5Connection()
-    conn.authenticate([SOCKS5AuthMethod.USERNAME_PASSWORD])
+    auth_methods_request = SOCKS5AuthMethodsRequest(
+        [SOCKS5AuthMethod.USERNAME_PASSWORD]
+    )
+    conn.send(auth_methods_request)
     conn.data_to_send()
     conn.receive_data(b"\x05" + SOCKS5AuthMethod.USERNAME_PASSWORD)
-    conn.authenticate_username_password(b"username", b"password")
-    conn.data_to_send()
+    auth_request = SOCKS5UsernamePasswordRequest(
+        username=b"username", password=b"password"
+    )
+    conn.send(auth_request)
     conn.receive_data(b"\x01\x00")
+    _ = conn.data_to_send()  # purge the buffer for further tests
     return conn
 
 
@@ -151,7 +207,8 @@ def authenticated_conn() -> SOCKS5Connection:
 def test_socks5_request_ipv4(
     authenticated_conn: SOCKS5Connection, command: SOCKS5Command
 ) -> None:
-    authenticated_conn.request(command, addr="127.0.0.1", port=1080)
+    cmd_request = SOCKS5CommandRequest.from_address(command, "127.0.0.1:1080")
+    authenticated_conn.send(cmd_request)
 
     data = authenticated_conn.data_to_send()
 
@@ -168,7 +225,8 @@ def test_socks5_request_ipv4(
 def test_socks5_request_domain_name(
     authenticated_conn: SOCKS5Connection, command: SOCKS5Command
 ) -> None:
-    authenticated_conn.request(command, addr="localhost", port=1080)
+    cmd_request = SOCKS5CommandRequest.from_address(command, "localhost:1080")
+    authenticated_conn.send(cmd_request)
 
     data = authenticated_conn.data_to_send()
 
@@ -186,7 +244,10 @@ def test_socks5_request_domain_name(
 def test_socks5_request_ipv6(
     authenticated_conn: SOCKS5Connection, command: SOCKS5Command
 ) -> None:
-    authenticated_conn.request(command, addr="0:0:0:0:0:0:0:1", port=1080)
+    cmd_request = SOCKS5CommandRequest.from_address(
+        command, address="[0:0:0:0:0:0:0:1]:1080"
+    )
+    authenticated_conn.send(cmd_request)
 
     data = authenticated_conn.data_to_send()
 

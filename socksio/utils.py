@@ -2,9 +2,13 @@ import enum
 import functools
 import socket
 import typing
+import re
 
 if typing.TYPE_CHECKING:
     from socksio.socks5 import SOCKS5AType  # pragma: nocover
+
+
+IP_V6_WITH_PORT_REGEX = re.compile(r"^\[(?P<address>[^\]]+)\]:(?P<port>\d+)$")
 
 
 class AddressType(enum.Enum):
@@ -47,3 +51,25 @@ def decode_address(address_type: AddressType, encoded_addr: bytes) -> str:
     else:
         assert address_type == AddressType.DN
         return encoded_addr.decode()
+
+
+def split_address_port_from_string(address: str) -> typing.Tuple[str, int]:
+    """Returns a tuple (address: str, port: int) from an address string with a port
+    i.e. '127.0.0.1:8080', '[0:0:0:0:0:0:0:1]:3080' or 'localhost:8080'.
+
+    Note no validation is done on the domain or IP itself.
+    """
+    match = re.match(IP_V6_WITH_PORT_REGEX, address)
+    if match:
+        address, str_port = match.group("address"), match.group("port")
+    else:
+        address, _, str_port = address.partition(":")
+
+    try:
+        return address, int(str_port)
+    except ValueError:
+        raise ValueError(
+            "Invalid address + port. Please supply a valid domain name, IPV4 or IPV6 "
+            "address with the port as a suffix, i.e. `127.0.0.1:3080`, "
+            "`[0:0:0:0:0:0:0:1]:3080` or `localhost:3080`"
+        ) from None

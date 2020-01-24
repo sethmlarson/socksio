@@ -2,7 +2,12 @@ import enum
 import typing
 
 from .exceptions import ProtocolError, SOCKSError
-from .utils import AddressType, decode_address, encode_address
+from .utils import (
+    AddressType,
+    decode_address,
+    encode_address,
+    split_address_port_from_string,
+)
 
 
 class SOCKS4ReplyCode(bytes, enum.Enum):
@@ -21,16 +26,41 @@ class SOCKS4Request(typing.NamedTuple):
     command: SOCKS4Command
     port: int
     addr: bytes
-    user_id: bytes
+    user_id: typing.Optional[bytes] = None
 
-    def dumps(self) -> bytes:
+    @classmethod
+    def from_address(
+        cls,
+        command: SOCKS4Command,
+        address: typing.Union[str, typing.Tuple[str, int]],
+        user_id: typing.Optional[bytes] = None,
+    ) -> "SOCKS4Request":
+        if isinstance(address, str):
+            address, port = split_address_port_from_string(address)
+        else:
+            address, port = address
+            if isinstance(port, str):
+                port = int(port)
+
+        atype, encoded_addr = encode_address(address)
+        if atype != AddressType.IPV4:
+            raise SOCKSError(
+                "IPv6 addresses and domain names are not supported by SOCKS4"
+            )
+        return cls(command=command, addr=encoded_addr, port=port, user_id=user_id)
+
+    def dumps(self, user_id: typing.Optional[bytes] = None) -> bytes:
+        user_id = user_id or self.user_id
+        if user_id is None:
+            raise SOCKSError("SOCKS4 requires a user_id, none was specified")
+
         return b"".join(
             [
                 b"\x04",
                 self.command,
                 (self.port).to_bytes(2, byteorder="big"),
                 self.addr,
-                self.user_id,
+                user_id,
                 b"\x00",
             ]
         )
@@ -40,16 +70,37 @@ class SOCKS4ARequest(typing.NamedTuple):
     command: SOCKS4Command
     port: int
     addr: bytes
-    user_id: bytes
+    user_id: typing.Optional[bytes] = None
 
-    def dumps(self) -> bytes:
+    @classmethod
+    def from_address(
+        cls,
+        command: SOCKS4Command,
+        address: typing.Union[str, typing.Tuple[str, int]],
+        user_id: typing.Optional[bytes] = None,
+    ) -> "SOCKS4ARequest":
+        if isinstance(address, str):
+            address, port = split_address_port_from_string(address)
+        else:
+            address, port = address
+            if isinstance(port, str):
+                port = int(port)
+
+        atype, encoded_addr = encode_address(address)
+        return cls(command=command, addr=encoded_addr, port=port, user_id=user_id)
+
+    def dumps(self, user_id: typing.Optional[bytes] = None) -> bytes:
+        user_id = user_id or self.user_id
+        if user_id is None:
+            raise SOCKSError("SOCKS4 requires a user_id, none was specified")
+
         return b"".join(
             [
                 b"\x04",
                 self.command,
                 (self.port).to_bytes(2, byteorder="big"),
                 b"\x00\x00\x00\xFF",  # arbitrary final non-zero byte
-                self.user_id,
+                user_id,
                 b"\x00",
                 self.addr,
                 b"\x00",
@@ -78,36 +129,15 @@ class SOCKS4Reply(typing.NamedTuple):
 
 
 class SOCKS4Connection:
-    def __init__(self, user_id: bytes, allow_domain_names: bool = False):
+    def __init__(self, user_id: bytes):
         self.user_id = user_id
-        self.allow_domain_names = allow_domain_names
 
         self._data_to_send = bytearray()
         self._received_data = bytearray()
 
-    def request(
-        self,
-        command: SOCKS4Command,
-        addr: str,
-        port: int,
-        user_id: typing.Optional[bytes] = None,
-    ) -> None:
-        user_id = user_id or self.user_id
-
-        RequestCls: typing.Union[
-            typing.Type[SOCKS4Request], typing.Type[SOCKS4ARequest]
-        ] = SOCKS4Request
-        address_type, encoded_addr = encode_address(addr)
-        if address_type == AddressType.IPV6:
-            raise SOCKSError("IPv6 addresses not supported by SOCKS4")
-        elif address_type == AddressType.DN:
-            if not self.allow_domain_names:
-                raise SOCKSError("Domain names only supported by SOCKS4A")
-            RequestCls = SOCKS4ARequest
-
-        request = RequestCls(command, port, encoded_addr, user_id)
-
-        self._data_to_send += request.dumps()
+    def send(self, request: typing.Union[SOCKS4Request, SOCKS4ARequest]) -> None:
+        user_id = request.user_id or self.user_id
+        self._data_to_send += request.dumps(user_id=user_id)
 
     def receive_data(self, data: bytes) -> SOCKS4Reply:
         self._received_data += data

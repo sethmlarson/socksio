@@ -2,7 +2,13 @@ import enum
 import typing
 
 from .exceptions import ProtocolError
-from .utils import AddressType, decode_address, encode_address
+from .utils import (
+    AddressType,
+    decode_address,
+    encode_address,
+    split_address_port_from_string,
+)
+from .compat import singledispatchmethod
 
 
 class SOCKS5AuthMethod(bytes, enum.Enum):
@@ -46,7 +52,7 @@ class SOCKS5ReplyCode(bytes, enum.Enum):
     ADDRESS_TYPE_NOT_SUPPORTED = b"\x08"
 
 
-class SOCKS5AuthRequest(typing.NamedTuple):
+class SOCKS5AuthMethodsRequest(typing.NamedTuple):
     methods: typing.List[SOCKS5AuthMethod]
 
     def dumps(self) -> bytes:
@@ -97,11 +103,33 @@ class SOCKS5UsernamePasswordReply(typing.NamedTuple):
         return cls(success=data == b"\x01\x00")
 
 
-class SOCKS5Request(typing.NamedTuple):
+class SOCKS5CommandRequest(typing.NamedTuple):
     command: SOCKS5Command
     atype: SOCKS5AType
     addr: bytes
     port: int
+
+    @classmethod
+    def from_address(
+        cls, command: SOCKS5Command, address: typing.Union[str, typing.Tuple[str, int]]
+    ) -> "SOCKS5CommandRequest":
+        """Convenience method for creating command requests from
+        standard address strings in the form of '127.0.0.1:3080'.
+        """
+        if isinstance(address, str):
+            address, port = split_address_port_from_string(address)
+        else:
+            address, port = address
+            if isinstance(port, str):
+                port = int(port)
+
+        atype, encoded_addr = encode_address(address)
+        return cls(
+            command=command,
+            atype=SOCKS5AType.from_atype(atype),
+            addr=encoded_addr,
+            port=port,
+        )
 
     def dumps(self) -> bytes:
         return b"".join(
@@ -179,6 +207,9 @@ class SOCKS5State(enum.IntEnum):
     MUST_CLOSE = 7
 
 
+SOCKS5RequestType = typing.Union[SOCKS5AuthMethodsRequest, SOCKS5CommandRequest]
+
+
 class SOCKS5Connection:
     def __init__(self) -> None:
         self._data_to_send = bytearray()
@@ -189,30 +220,28 @@ class SOCKS5Connection:
     def state(self) -> SOCKS5State:
         return self._state
 
-    def authenticate(self, methods: typing.List[SOCKS5AuthMethod]) -> None:
-        auth_request = SOCKS5AuthRequest(methods)
-        self._data_to_send += auth_request.dumps()
+    @singledispatchmethod  # type: ignore
+    def send(self, request: SOCKS5RequestType) -> None:
+        raise NotImplementedError()  # pragma: nocover
+
+    @send.register(SOCKS5AuthMethodsRequest)  # type: ignore
+    def _auth_methods(self, request: SOCKS5AuthMethodsRequest) -> None:
+        self._data_to_send += request.dumps()
         self._state = SOCKS5State.SERVER_AUTH_REPLY
 
-    def authenticate_username_password(self, username: bytes, password: bytes) -> None:
+    @send.register(SOCKS5UsernamePasswordRequest)  # type: ignore
+    def _auth_username_password(self, request: SOCKS5UsernamePasswordRequest) -> None:
         if self._state != SOCKS5State.CLIENT_WAITING_FOR_USERNAME_PASSWORD:
             raise ProtocolError("Not currently waiting for username and password")
         self._state = SOCKS5State.SERVER_VERIFY_USERNAME_PASSWORD
-        request = SOCKS5UsernamePasswordRequest(username=username, password=password)
         self._data_to_send += request.dumps()
 
-    def request(self, command: SOCKS5Command, addr: str, port: int) -> None:
+    @send.register(SOCKS5CommandRequest)  # type: ignore
+    def _command(self, request: SOCKS5AuthMethodsRequest) -> None:
         if self._state < SOCKS5State.CLIENT_AUTHENTICATED:
             raise ProtocolError(
                 "SOCKS5 connections must be authenticated before sending a request"
             )
-        atype, encoded_addr = encode_address(addr)
-        request = SOCKS5Request(
-            command=command,
-            atype=SOCKS5AType.from_atype(atype),
-            addr=encoded_addr,
-            port=port,
-        )
         self._data_to_send += request.dumps()
 
     def receive_data(
@@ -246,6 +275,8 @@ class SOCKS5Connection:
         raise NotImplementedError()  # pragma: nocover
 
     def data_to_send(self) -> bytes:
+        """Returns the data to be sent via the I/O library of choice clearing
+        the connection's buffer."""
         data = bytes(self._data_to_send)
         self._data_to_send = bytearray()
         return data

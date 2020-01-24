@@ -14,8 +14,8 @@ def receive_data(sock):
 
 
 def main():
-    # Assuming a running SOCKS4 proxy running in localhost:8080
-    sock = socket.create_connection(("localhost", 8080))
+    # Assuming a running SOCKS4 proxy running in localhost:1080
+    sock = socket.create_connection(("localhost", 1080))
     conn = socks4.SOCKS4Connection(user_id=b"socksio")
 
     # Request to connect to google.com port 80

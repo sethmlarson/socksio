@@ -7,7 +7,7 @@ def test_singledispatchmethod():
     class Foo:
         @singledispatchmethod
         def bar():
-            raise NotImplementedError()
+            raise NotImplementedError()  # pragma: nocover
 
         @bar.register(str)
         def _(self, arg: str) -> None:

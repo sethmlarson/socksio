@@ -63,7 +63,7 @@ def split_address_port_from_string(address: str) -> typing.Tuple[str, int]:
     if match:
         address, str_port = match.group("address"), match.group("port")
     else:
-        address, str_port = address.split(":")
+        address, _, str_port = address.partition(":")
 
     try:
         return address, int(str_port)

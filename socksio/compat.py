@@ -8,7 +8,7 @@ import functools
 import typing
 
 
-if hasattr(functools, "singledispatchmethod"):
+if hasattr(functools, "singledispatchmethod"):  # pragma: nocover
     singledispatchmethod = functools.singledispatchmethod  # type: ignore
 else:
     update_wrapper = functools.update_wrapper

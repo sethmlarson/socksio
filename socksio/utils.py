@@ -8,7 +8,7 @@ if typing.TYPE_CHECKING:
     from socksio.socks5 import SOCKS5AType  # pragma: nocover
 
 
-IP_V6_WITH_PORT_REGEX = re.compile(r"\[(?P<address>.+)\]:(?P<port>\d+)")
+IP_V6_WITH_PORT_REGEX = re.compile(r"^\[(?P<address>[^\]]+)\]:(?P<port>\d+)$")
 
 
 class AddressType(enum.Enum):

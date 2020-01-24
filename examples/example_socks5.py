@@ -19,12 +19,13 @@ def main():
     conn = socks5.SOCKS5Connection()
 
     # The proxy may return any of these options
-    conn.authenticate(
+    request = socks5.SOCKS5AuthMethodsRequest(
         [
             socks5.SOCKS5AuthMethod.NO_AUTH_REQUIRED,
             socks5.SOCKS5AuthMethod.USERNAME_PASSWORD,
         ]
     )
+    conn.send(request)
     send_data(sock, conn.data_to_send())
     data = receive_data(sock)
     event = conn.receive_data(data)
@@ -32,7 +33,8 @@ def main():
 
     # If the proxy requires username/password you'll have to edit them below
     if event.method == socks5.SOCKS5AuthMethod.USERNAME_PASSWORD:
-        conn.authenticate_username_password(b"username", b"password")
+        request = socks5.SOCKS5UsernamePasswordRequest(b"username", b"password")
+        conn.send(request)
         send_data(sock, conn.data_to_send())
         data = receive_data(sock)
         event = conn.receive_data(data)
@@ -41,7 +43,10 @@ def main():
             raise Exception("Invalid username/password")
 
     # Request to connect to google.com port 80
-    conn.request(socks5.SOCKS5Command.CONNECT, "google.com", 80)
+    request = socks5.SOCKS5CommandRequest.from_address(
+        socks5.SOCKS5Command.CONNECT, ("google.com", 80)
+    )
+    conn.send(request)
     send_data(sock, conn.data_to_send())
     data = receive_data(sock)
     event = conn.receive_data(data)

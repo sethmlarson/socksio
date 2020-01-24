@@ -16,11 +16,14 @@ def receive_data(sock):
 def main():
     # Assuming a running SOCKS4 proxy running in localhost:8080
     sock = socket.create_connection(("localhost", 8080))
-    conn = socks4.SOCKS4Connection(user_id=b"foo")
+    conn = socks4.SOCKS4Connection(user_id=b"socksio")
 
     # Request to connect to google.com port 80
     # SOCKS4 does not allow domain names, below is an IP for google.com
-    conn.request(socks4.SOCKS4Command.CONNECT, "216.58.204.78", 80)
+    request = socks4.SOCKS4Request.from_address(
+        socks4.SOCKS4Command.CONNECT, ("216.58.204.78", 80)  # or "216.58.204.78:80"
+    )
+    conn.send(request)
     send_data(sock, conn.data_to_send())
     data = receive_data(sock)
     event = conn.receive_data(data)

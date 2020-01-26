@@ -14,8 +14,8 @@ def receive_data(sock):
 
 
 def main():
-    # Assuming a running SOCKS5 proxy running in localhost:8080
-    sock = socket.create_connection(("localhost", 8080))
+    # Assuming a running SOCKS5 proxy running in localhost:1080
+    sock = socket.create_connection(("localhost", 1080))
     conn = socks5.SOCKS5Connection()
 
     # The proxy may return any of these options
@@ -33,7 +33,7 @@ def main():
 
     # If the proxy requires username/password you'll have to edit them below
     if event.method == socks5.SOCKS5AuthMethod.USERNAME_PASSWORD:
-        request = socks5.SOCKS5UsernamePasswordRequest(b"username", b"password")
+        request = socks5.SOCKS5UsernamePasswordRequest(b"socksio", b"socksio")
         conn.send(request)
         send_data(sock, conn.data_to_send())
         data = receive_data(sock)

@@ -2,12 +2,12 @@
 
 from .exceptions import ProtocolError, SOCKSError
 from .socks4 import (
+    SOCKS4ARequest,
     SOCKS4Command,
     SOCKS4Connection,
     SOCKS4Reply,
     SOCKS4ReplyCode,
     SOCKS4Request,
-    SOCKS4ARequest,
 )
 from .socks5 import (
     SOCKS5AType,

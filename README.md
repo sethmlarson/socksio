@@ -55,15 +55,28 @@ Since `socksio` is a sans-I/O library, we will use the socket to send and
 receive data to our SOCKS4 proxy. The raw data, however, will be created and
 parsed by our `SOCKS4Connection`.
 
-We need to tell our connection we want to make a request to the proxy:
+We need to tell our connection we want to make a request to the proxy. We do
+that by first creating a request object.
+
+In SOCKS4 we only need to send a command along with an IP address and port.
+`socksio` exposes the different types of commands as enumerables and a
+convenience `from_address` class method in the request classes to create a
+valid request object:
 
 ```python
 # SOCKS4 does not allow domain names, below is an IP for google.com
-conn.request(socks4.SOCKS4Command.CONNECT, "216.58.204.78", 80)
+request = socks4.SOCKS4CommandRequest.from_address(
+    socks4.SOCKS4Command.CONNECT, ("216.58.204.78", 80))
 ```
 
-`socksio` exposes the possible SOCKS4 commands, we choose `CONNECT` and
-specify the IP address and port we want to connect to.
+`from_address` methods are available on all request classes in `socksio`, they
+accept addresses as tuples of `(address, port)` as well as string `address:port`.
+
+Now we ask the connection to send our request:
+
+```python
+conn.send(request)
+```
 
 The `SOCKS4Connection` will then compose the necessary `bytes` in the proper
 format for us to send to our proxy:
@@ -102,7 +115,8 @@ print(data)
 ```
 
 The same methodology is used for all protocols, check out the
-[examples directory](examples/) for more information.
+[examples directory](https://github.com/sethmlarson/socksio/tree/master/examples/)
+for more information.
 
 ## Development
 

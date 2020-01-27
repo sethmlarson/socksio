@@ -2,7 +2,7 @@ import nox
 
 nox.options.stop_on_first_error = True
 
-source_files = ("socksio", "tests", "noxfile.py")
+source_files = ("socksio", "tests/", "noxfile.py", "examples/")
 
 
 @nox.session()
@@ -20,9 +20,12 @@ def lint(session):
 @nox.session(reuse_venv=True)
 def check(session):
     session.install(
-        "black", "flake8", "flake8-bugbear", "flake8-comprehensions", "mypy"
+        "black", "flake8", "flake8-bugbear", "flake8-comprehensions", "mypy", "isort"
     )
 
+    session.run(
+        "isort", "--project=socksio", "--recursive", "--check-only", *source_files
+    )
     session.run("black", "--check", "--diff", "--target-version=py36", *source_files)
     session.run("flake8", *source_files)
     session.run("mypy", "--strict", "socksio")

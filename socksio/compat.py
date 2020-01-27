@@ -7,7 +7,6 @@ removing 2.7 specific code.
 import functools
 import typing
 
-
 if hasattr(functools, "singledispatchmethod"):  # pragma: nocover
     singledispatchmethod = functools.singledispatchmethod  # type: ignore
 else:

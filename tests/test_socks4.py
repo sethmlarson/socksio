@@ -2,12 +2,12 @@ import pytest
 
 from socksio import (
     ProtocolError,
+    SOCKS4ARequest,
     SOCKS4Command,
     SOCKS4Connection,
     SOCKS4Reply,
     SOCKS4ReplyCode,
     SOCKS4Request,
-    SOCKS4ARequest,
     SOCKSError,
 )
 

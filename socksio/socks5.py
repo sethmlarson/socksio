@@ -1,6 +1,7 @@
 import enum
 import typing
 
+from .compat import singledispatchmethod
 from .exceptions import ProtocolError
 from .utils import (
     AddressType,
@@ -8,7 +9,6 @@ from .utils import (
     encode_address,
     split_address_port_from_string,
 )
-from .compat import singledispatchmethod
 
 
 class SOCKS5AuthMethod(bytes, enum.Enum):

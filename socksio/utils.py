@@ -1,8 +1,8 @@
 import enum
 import functools
+import re
 import socket
 import typing
-import re
 
 if typing.TYPE_CHECKING:
     from socksio.socks5 import SOCKS5AType  # pragma: nocover

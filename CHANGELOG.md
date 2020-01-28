@@ -1,17 +1,19 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (2020-01-28)
 
-- BREAKING: API redesign using request objects and reducing the methods in
+### Changed
+
+- **BREAKING**: API redesign using request objects and reducing the methods in
 the different connection classes [#37](https://github.com/sethmlarson/socksio/pull/37).
 
-## 0.1.1 (10th January 2020)
+## 0.1.1 (2020-01-10)
 
 ### Fixed
 
 - SOCKS5 prefixing domain name with length [#29](https://github.com/sethmlarson/socksio/pull/29).
 - SOCKS5 requiring authentication even if no authentication method is specified [#30](https://github.com/sethmlarson/socksio/pull/30).
 
-## 0.1.0 (3rd December 2019)
+## 0.1.0 (2019-12-03)
 
 Initial release.

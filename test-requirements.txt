@@ -8,3 +8,4 @@ mypy
 nox
 pytest
 pytest-cov
+sphinx

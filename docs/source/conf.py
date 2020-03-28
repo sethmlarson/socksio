@@ -17,7 +17,6 @@ import datetime
 
 import socksio
 
-
 # -- Project information -----------------------------------------------------
 
 project = "socksio"

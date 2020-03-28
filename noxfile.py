@@ -2,7 +2,7 @@ import nox
 
 nox.options.stop_on_first_error = True
 
-source_files = ("socksio", "tests/", "noxfile.py", "examples/")
+source_files = ("socksio", "tests/", "noxfile.py", "examples/", "docs/source/")
 
 
 @nox.session()
@@ -35,3 +35,9 @@ def check(session):
 def test(session):
     session.install("-r", "test-requirements.txt")
     session.run("python", "-m", "pytest", *session.posargs)
+
+
+@nox.session(reuse_venv=True)
+def docs(session):
+    session.install("sphinx", "sphinx_rtd_theme", ".")
+    session.run("sphinx-build", "-b", "html", "docs/source/", "docs/build/html/")

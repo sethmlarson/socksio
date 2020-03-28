@@ -1,6 +1,8 @@
 Usage
 -----
 
+.. currentmodule:: socksio
+
 TL;DR check the `examples directory
 <https://github.com/sethmlarson/socksio/tree/master/examples/>`_.
 
@@ -30,20 +32,20 @@ includes a ``Connection`` class:
 
 Since ``socksio`` is a sans-I/O library, we will use the socket to send
 and receive data to our SOCKS4 proxy. The raw data, however, will be
-created and parsed by our ``SOCKS4Connection``.
+created and parsed by our :class:`SOCKS4Connection <socks4.SOCKS4Connection>`.
 
 We need to tell our connection we want to make a request to the proxy.
 We do that by first creating a request object.
 
 In SOCKS4 we only need to send a command along with an IP address and
 port. ``socksio`` exposes the different types of commands as enumerables
-and a convenience ``from_address`` class method in the request classes
-to create a valid request object:
+and a convenience :meth:`~socks4.SOCKS4Request.from_address`
+class method in the request classes to create a valid request object:
 
 .. code:: python
 
     # SOCKS4 does not allow domain names, below is an IP for google.com
-    request = socks4.SOCKS4CommandRequest.from_address(
+    request = socks4.SOCKS4Request.from_address(
         socks4.SOCKS4Command.CONNECT, ("216.58.204.78", 80))
 
 ``from_address`` methods are available on all request classes in
@@ -56,8 +58,8 @@ Now we ask the connection to send our request:
 
     conn.send(request)
 
-The ``SOCKS4Connection`` will then compose the necessary ``bytes`` in
-the proper format for us to send to our proxy:
+The :class:`SOCKS4Connection <socks4.SOCKS4Connection>` will then compose the
+necessary ``bytes`` in the proper format for us to send to our proxy:
 
 .. code:: python
 
@@ -65,7 +67,8 @@ the proper format for us to send to our proxy:
     sock.sendall(data)
 
 If all goes well the proxy will have sent reply, we just need to read
-from the socket and pass the data to the ``SOCKS4Connection``:
+from the socket and pass the data to the
+:class:`SOCKS4Connection <socks4.SOCKS4Connection>`:
 
 .. code:: python
 
@@ -73,8 +76,8 @@ from the socket and pass the data to the ``SOCKS4Connection``:
     event = conn.receive_data(data)
 
 The connection will parse the data and return an event from it, in this
-case, a ``SOCKS4Reply`` that includes attributes for the fields in the
-SOCKS reply:
+case, a :class:`SOCKS4Reply <socks4.SOCKS4Reply>` that includes attributes for
+the fields in the SOCKS reply:
 
 .. code:: python
 

@@ -65,7 +65,7 @@ valid request object:
 
 ```python
 # SOCKS4 does not allow domain names, below is an IP for google.com
-request = socks4.SOCKS4CommandRequest.from_address(
+request = socks4.SOCKS4Request.from_address(
     socks4.SOCKS4Command.CONNECT, ("216.58.204.78", 80))
 ```
 

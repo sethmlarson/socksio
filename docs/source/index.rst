@@ -26,6 +26,7 @@ Contents
 
    usage.rst
    development.rst
+   api_socks4.rst
 
 Reference documents
 -------------------

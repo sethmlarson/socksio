@@ -11,7 +11,8 @@ in a single module and most components are shared.
 The only practical difference is the usage of a :class:`SOCKS4Request` versus
 :class:`SOCKS4Request`.
 
-Remember SOCKS4 allows only for IPv4 addresses, i.e. no IPv6 or domain names.
+Remember SOCKS4 allows only for IPv4 addresses and SOCKS4A supports domain names.
+Neither support IPv6.
 
 .. automodule:: socksio.socks4
    :members:

@@ -8,8 +8,8 @@ library itself does not handle the actual sending of the bytes through
 the network, it only deals with the implementation details of the SOCKS
 protocols so you can use it in any I/O library you want.
 
-Current status: alpha
----------------------
+Current status: stable
+----------------------
 
 The API is not final and may be subject to change.
 

@@ -12,6 +12,8 @@ from .utils import (
 
 
 class SOCKS5AuthMethod(bytes, enum.Enum):
+    """Enumeration of SOCKS5 authentication methods."""
+
     NO_AUTH_REQUIRED = b"\x00"
     GSSAPI = b"\x01"
     USERNAME_PASSWORD = b"\x02"
@@ -19,12 +21,16 @@ class SOCKS5AuthMethod(bytes, enum.Enum):
 
 
 class SOCKS5Command(bytes, enum.Enum):
+    """Enumeration of SOCKS5 commands."""
+
     CONNECT = b"\x01"
     BIND = b"\x02"
     UDP_ASSOCIATE = b"\x03"
 
 
 class SOCKS5AType(bytes, enum.Enum):
+    """Enumeration of SOCKS5 address types."""
+
     IPV4_ADDRESS = b"\x01"
     DOMAIN_NAME = b"\x03"
     IPV6_ADDRESS = b"\x04"
@@ -41,6 +47,8 @@ class SOCKS5AType(bytes, enum.Enum):
 
 
 class SOCKS5ReplyCode(bytes, enum.Enum):
+    """Enumeration of SOCKS5 reply codes."""
+
     SUCCEEDED = b"\x00"
     GENERAL_SERVER_FAILURE = b"\x01"
     CONNECTION_NOT_ALLOWED_BY_RULESET = b"\x02"
@@ -53,9 +61,17 @@ class SOCKS5ReplyCode(bytes, enum.Enum):
 
 
 class SOCKS5AuthMethodsRequest(typing.NamedTuple):
+    """Encapsulates a request to the proxy for available authentication methods.
+
+    Args:
+        methods: A list of acceptable authentication methods.
+    """
+
     methods: typing.List[SOCKS5AuthMethod]
 
     def dumps(self) -> bytes:
+        """Packs the instance into a raw binary in the appropriate form."""
+
         return b"".join(
             [
                 b"\x05",
@@ -66,10 +82,27 @@ class SOCKS5AuthMethodsRequest(typing.NamedTuple):
 
 
 class SOCKS5AuthReply(typing.NamedTuple):
+    """Encapsulates a reply from the proxy with the authentication method to be used.
+
+    Args:
+        method: The authentication method to be used.
+
+    Raises:
+        ProtocolError: If the data does not conform with the expected structure.
+    """
+
     method: SOCKS5AuthMethod
 
     @classmethod
     def loads(cls, data: bytes) -> "SOCKS5AuthReply":
+        """Unpacks the authentication reply data into an instance.
+
+        Returns:
+            The unpacked authentication reply instance.
+
+        Raises:
+            ProtocolError: If the data does not match the spec.
+        """
         if len(data) != 2:
             raise ProtocolError("Malformed reply")
 
@@ -80,10 +113,17 @@ class SOCKS5AuthReply(typing.NamedTuple):
 
 
 class SOCKS5UsernamePasswordRequest(typing.NamedTuple):
+    """Encapsulates a username/password authentication request to the proxy server."""
+
     username: bytes
     password: bytes
 
     def dumps(self) -> bytes:
+        """Packs the instance into a raw binary in the appropriate form.
+
+        Returns:
+            The packed request.
+        """
         return b"".join(
             [
                 b"\x01",
@@ -96,14 +136,30 @@ class SOCKS5UsernamePasswordRequest(typing.NamedTuple):
 
 
 class SOCKS5UsernamePasswordReply(typing.NamedTuple):
+    """Encapsulates a username/password authentication reply from the proxy server."""
+
     success: bool
 
     @classmethod
     def loads(cls, data: bytes) -> "SOCKS5UsernamePasswordReply":
+        """Unpacks the reply authentication data into an instance.
+
+        Returns:
+            The unpacked authentication reply instance.
+        """
         return cls(success=data == b"\x01\x00")
 
 
 class SOCKS5CommandRequest(typing.NamedTuple):
+    """Encapsulates a command request to the proxy server.
+
+    Args:
+        command: The command to request.
+        atype: The address type of the addr field.
+        addr: Address of the target host.
+        port: The port number to connect to on the target host.
+    """
+
     command: SOCKS5Command
     atype: SOCKS5AType
     addr: bytes
@@ -113,8 +169,18 @@ class SOCKS5CommandRequest(typing.NamedTuple):
     def from_address(
         cls, command: SOCKS5Command, address: typing.Union[str, typing.Tuple[str, int]]
     ) -> "SOCKS5CommandRequest":
-        """Convenience method for creating command requests from
-        standard address strings in the form of '127.0.0.1:3080'.
+        """Convenience class method to build an instance from command and address.
+
+        Args:
+            command: The command to request.
+            address: A string in the form 'HOST:PORT' or a tuple of ip address string
+                and port number. The address type will be inferred.
+
+        Returns:
+            A SOCKS5CommandRequest instance.
+
+        Raises:
+            SOCKSError: If a domain name or IPv6 address was supplied.
         """
         if isinstance(address, str):
             address, port = split_address_port_from_string(address)
@@ -132,6 +198,11 @@ class SOCKS5CommandRequest(typing.NamedTuple):
         )
 
     def dumps(self) -> bytes:
+        """Packs the instance into a raw binary in the appropriate form.
+
+        Returns:
+            The packed request.
+        """
         return b"".join(
             [
                 b"\x05",
@@ -145,6 +216,7 @@ class SOCKS5CommandRequest(typing.NamedTuple):
 
     @property
     def packed_addr(self) -> bytes:
+        """Property returning the packed address in the correct form for its type."""
         if self.atype == SOCKS5AType.IPV4_ADDRESS:
             assert len(self.addr) == 4
             return self.addr
@@ -157,6 +229,15 @@ class SOCKS5CommandRequest(typing.NamedTuple):
 
 
 class SOCKS5Reply(typing.NamedTuple):
+    """Encapsulates a reply from the SOCKS5 proxy server
+
+    Args:
+        reply_code: The code representing the type of reply.
+        atype: The address type of the addr field.
+        addr: Optional IP address returned.
+        port: The port number returned.
+    """
+
     reply_code: SOCKS5ReplyCode
     atype: SOCKS5AType
     addr: str
@@ -164,6 +245,14 @@ class SOCKS5Reply(typing.NamedTuple):
 
     @classmethod
     def loads(cls, data: bytes) -> "SOCKS5Reply":
+        """Unpacks the reply data into an instance.
+
+        Returns:
+            The unpacked reply instance.
+
+        Raises:
+            ProtocolError: If the data does not match the spec.
+        """
         if data[0:1] != b"\x05":
             raise ProtocolError("Malformed reply")
 
@@ -181,6 +270,11 @@ class SOCKS5Reply(typing.NamedTuple):
 
 
 class SOCKS5Datagram(typing.NamedTuple):
+    """Encapsulates a SOCKS5 datagram for UDP connections.
+
+    Currently not implemented.
+    """
+
     atype: SOCKS5AType
     addr: bytes
     port: int
@@ -198,6 +292,8 @@ class SOCKS5Datagram(typing.NamedTuple):
 
 
 class SOCKS5State(enum.IntEnum):
+    """Enumeration of SOCKS5 protocol states."""
+
     CLIENT_AUTH_REQUIRED = 1
     SERVER_AUTH_REPLY = 2
     CLIENT_AUTHENTICATED = 3
@@ -211,6 +307,12 @@ SOCKS5RequestType = typing.Union[SOCKS5AuthMethodsRequest, SOCKS5CommandRequest]
 
 
 class SOCKS5Connection:
+    """Encapsulates a SOCKS5 connection.
+
+    Packs request objects into data suitable to be send and unpacks reply
+    data into their appropriate reply objects.
+    """
+
     def __init__(self) -> None:
         self._data_to_send = bytearray()
         self._received_data = bytearray()
@@ -218,10 +320,18 @@ class SOCKS5Connection:
 
     @property
     def state(self) -> SOCKS5State:
+        """Returns the current state of the protocol."""
         return self._state
 
     @singledispatchmethod  # type: ignore
     def send(self, request: SOCKS5RequestType) -> None:
+        """Packs a request object and adds it to the send data buffer.
+
+        Also progresses the protocol state of the connection.
+
+        Args:
+            request: The request instance to be packed.
+        """
         raise NotImplementedError()  # pragma: nocover
 
     @send.register(SOCKS5AuthMethodsRequest)  # type: ignore
@@ -247,6 +357,14 @@ class SOCKS5Connection:
     def receive_data(
         self, data: bytes
     ) -> typing.Union[SOCKS5AuthReply, SOCKS5Reply, SOCKS5UsernamePasswordReply]:
+        """Unpacks response data into a reply object.
+
+        Args:
+            data: The raw response data from the proxy server.
+
+        Returns:
+            A reply instance corresponding to the connection state and reply data.
+        """
         if self._state == SOCKS5State.SERVER_AUTH_REPLY:
             auth_reply = SOCKS5AuthReply.loads(data)
             if auth_reply.method == SOCKS5AuthMethod.USERNAME_PASSWORD:
@@ -275,8 +393,10 @@ class SOCKS5Connection:
         raise NotImplementedError()  # pragma: nocover
 
     def data_to_send(self) -> bytes:
-        """Returns the data to be sent via the I/O library of choice clearing
-        the connection's buffer."""
+        """Returns the data to be sent via the I/O library of choice.
+
+        Also clears the connection's buffer.
+        """
         data = bytes(self._data_to_send)
         self._data_to_send = bytearray()
         return data

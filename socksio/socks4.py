@@ -78,7 +78,7 @@ class SOCKS4Request(typing.NamedTuple):
         return cls(command=command, addr=encoded_addr, port=port, user_id=user_id)
 
     def dumps(self, user_id: typing.Optional[bytes] = None) -> bytes:
-        """Packs the instance data into a raw binary in the appropriate form.
+        """Packs the instance into a raw binary in the appropriate form.
 
         Args:
             user_id: Optional user ID as an override, if not provided the instance's
@@ -151,7 +151,7 @@ class SOCKS4ARequest(typing.NamedTuple):
         return cls(command=command, addr=encoded_addr, port=port, user_id=user_id)
 
     def dumps(self, user_id: typing.Optional[bytes] = None) -> bytes:
-        """Packs the instance data into a raw binary in the appropriate form.
+        """Packs the instance into a raw binary in the appropriate form.
 
         Args:
             user_id: Optional user ID as an override, if not provided the instance's
@@ -196,7 +196,7 @@ class SOCKS4Reply(typing.NamedTuple):
 
     @classmethod
     def loads(cls, data: bytes) -> "SOCKS4Reply":
-        """Unpacks the data into an instance.
+        """Unpacks the reply data into an instance.
 
         Returns:
             The unpacked reply instance.
@@ -236,7 +236,8 @@ class SOCKS4Connection:
     def send(self, request: typing.Union[SOCKS4Request, SOCKS4ARequest]) -> None:
         """Packs a request object and adds it to the send data buffer.
 
-            request: The user ID to be sent as part of the requests.
+        Args:
+            request: The request instance to be packed.
         """
         user_id = request.user_id or self.user_id
         self._data_to_send += request.dumps(user_id=user_id)
@@ -246,12 +247,18 @@ class SOCKS4Connection:
 
         Args:
             data: The raw response data from the proxy server.
+
+        Returns:
+            The appropriate reply object.
         """
         self._received_data += data
         return SOCKS4Reply.loads(bytes(self._received_data))
 
     def data_to_send(self) -> bytes:
-        """Returns the data to be sent and resets the buffer. """
+        """Returns the data to be sent via the I/O library of choice.
+
+        Also clears the connection's buffer.
+        """
         data = bytes(self._data_to_send)
         self._data_to_send = bytearray()
         return data

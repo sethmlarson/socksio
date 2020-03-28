@@ -1,5 +1,7 @@
 .. _SOCKS4-API-documentation:
 
+.. currentmodule:: socksio.socks4
+
 SOCKS4 and SOCKS4A API documentation
 ====================================
 

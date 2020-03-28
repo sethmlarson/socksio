@@ -13,12 +13,13 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+import datetime
 
 
 # -- Project information -----------------------------------------------------
 
 project = "socksio"
-copyright = "2020, Seth Michael Larson"
+copyright = "{}, Seth Michael Larson".format(datetime.date.today().year)
 author = "Seth Michael Larson"
 
 # The full version, including alpha/beta/rc tags

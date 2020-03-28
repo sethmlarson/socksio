@@ -15,6 +15,8 @@
 # sys.path.insert(0, os.path.abspath('.'))
 import datetime
 
+import socksio
+
 
 # -- Project information -----------------------------------------------------
 
@@ -23,7 +25,7 @@ copyright = "{}, Seth Michael Larson".format(datetime.date.today().year)
 author = "Seth Michael Larson"
 
 # The full version, including alpha/beta/rc tags
-release = "0.2.0"
+release = socksio.__version__
 
 
 # -- General configuration ---------------------------------------------------

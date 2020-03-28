@@ -15,9 +15,7 @@ does not handle the actual sending of the bytes through the network, it only
 deals with the implementation details of the SOCKS protocols so you can use
 it in any I/O library you want.
 
-## Current status: alpha
-
-The API is not final and may be subject to change.
+## Current status: stable
 
 Features not yet implemented:
 
@@ -65,7 +63,7 @@ valid request object:
 
 ```python
 # SOCKS4 does not allow domain names, below is an IP for google.com
-request = socks4.SOCKS4CommandRequest.from_address(
+request = socks4.SOCKS4Request.from_address(
     socks4.SOCKS4Command.CONNECT, ("216.58.204.78", 80))
 ```
 

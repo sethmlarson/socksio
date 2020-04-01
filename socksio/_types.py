@@ -1,3 +1,3 @@
-import typing as t
+import typing
 
-StrOrBytes = t.Union[str, bytes]
+StrOrBytes = typing.Union[str, bytes]

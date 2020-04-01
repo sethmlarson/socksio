@@ -1,6 +1,7 @@
 import enum
 import typing
 
+from ._types import StrOrBytes
 from .compat import singledispatchmethod
 from .exceptions import ProtocolError
 from .utils import (
@@ -167,7 +168,9 @@ class SOCKS5CommandRequest(typing.NamedTuple):
 
     @classmethod
     def from_address(
-        cls, command: SOCKS5Command, address: typing.Union[str, typing.Tuple[str, int]]
+        cls,
+        command: SOCKS5Command,
+        address: typing.Union[StrOrBytes, typing.Tuple[StrOrBytes, int]],
     ) -> "SOCKS5CommandRequest":
         """Convenience class method to build an instance from command and address.
 
@@ -182,11 +185,11 @@ class SOCKS5CommandRequest(typing.NamedTuple):
         Raises:
             SOCKSError: If a domain name or IPv6 address was supplied.
         """
-        if isinstance(address, str):
+        if isinstance(address, (str, bytes)):
             address, port = split_address_port_from_string(address)
         else:
             address, port = address
-            if isinstance(port, str):
+            if isinstance(port, (str, bytes)):
                 port = int(port)
 
         atype, encoded_addr = encode_address(address)

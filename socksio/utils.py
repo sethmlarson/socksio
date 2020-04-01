@@ -4,6 +4,8 @@ import re
 import socket
 import typing
 
+from ._types import StrOrBytes
+
 if typing.TYPE_CHECKING:
     from socksio.socks5 import SOCKS5AType  # pragma: nocover
 
@@ -30,8 +32,9 @@ class AddressType(enum.Enum):
 
 
 @functools.lru_cache(maxsize=64)
-def encode_address(addr: str) -> typing.Tuple[AddressType, bytes]:
+def encode_address(addr: StrOrBytes) -> typing.Tuple[AddressType, bytes]:
     """Determines the type of address and encodes it into the format SOCKS expects"""
+    addr = addr.decode() if isinstance(addr, bytes) else addr
     try:
         return AddressType.IPV6, socket.inet_pton(socket.AF_INET6, addr)
     except OSError:
@@ -53,12 +56,13 @@ def decode_address(address_type: AddressType, encoded_addr: bytes) -> str:
         return encoded_addr.decode()
 
 
-def split_address_port_from_string(address: str) -> typing.Tuple[str, int]:
+def split_address_port_from_string(address: StrOrBytes) -> typing.Tuple[str, int]:
     """Returns a tuple (address: str, port: int) from an address string with a port
     i.e. '127.0.0.1:8080', '[0:0:0:0:0:0:0:1]:3080' or 'localhost:8080'.
 
     Note no validation is done on the domain or IP itself.
     """
+    address = address.decode() if isinstance(address, bytes) else address
     match = re.match(IP_V6_WITH_PORT_REGEX, address)
     if match:
         address, str_port = match.group("address"), match.group("port")

@@ -1,6 +1,7 @@
 import enum
 import typing
 
+from ._types import StrOrBytes
 from .exceptions import ProtocolError, SOCKSError
 from .utils import (
     AddressType,
@@ -46,7 +47,7 @@ class SOCKS4Request(typing.NamedTuple):
     def from_address(
         cls,
         command: SOCKS4Command,
-        address: typing.Union[str, typing.Tuple[str, int]],
+        address: typing.Union[StrOrBytes, typing.Tuple[StrOrBytes, int]],
         user_id: typing.Optional[bytes] = None,
     ) -> "SOCKS4Request":
         """Convenience class method to build an instance from command and address.
@@ -63,11 +64,11 @@ class SOCKS4Request(typing.NamedTuple):
         Raises:
             SOCKSError: If a domain name or IPv6 address was supplied.
         """
-        if isinstance(address, str):
+        if isinstance(address, (str, bytes)):
             address, port = split_address_port_from_string(address)
         else:
             address, port = address
-            if isinstance(port, str):
+            if isinstance(port, (str, bytes)):
                 port = int(port)
 
         atype, encoded_addr = encode_address(address)
@@ -126,7 +127,7 @@ class SOCKS4ARequest(typing.NamedTuple):
     def from_address(
         cls,
         command: SOCKS4Command,
-        address: typing.Union[str, typing.Tuple[str, int]],
+        address: typing.Union[StrOrBytes, typing.Tuple[StrOrBytes, int]],
         user_id: typing.Optional[bytes] = None,
     ) -> "SOCKS4ARequest":
         """Convenience class method to build an instance from command and address.
@@ -140,11 +141,11 @@ class SOCKS4ARequest(typing.NamedTuple):
         Returns:
             A SOCKS4ARequest instance.
         """
-        if isinstance(address, str):
+        if isinstance(address, (str, bytes)):
             address, port = split_address_port_from_string(address)
         else:
             address, port = address
-            if isinstance(port, str):
+            if isinstance(port, (str, bytes)):
                 port = int(port)
 
         atype, encoded_addr = encode_address(address)

@@ -83,11 +83,13 @@ def get_address_port_tuple_from_address(
     address: typing.Union[StrOrBytes, typing.Tuple[StrOrBytes, int]]
 ) -> typing.Tuple[str, int]:
     """Returns an (address, port) from an address string-like or tuple."""
-    if isinstance(address, (str, bytes)):
-        address, port = split_address_port_from_string(address)
-    else:
+    if isinstance(address, tuple):
         address, port = address
+        if isinstance(address, bytes):
+            address = address.decode()
         if isinstance(port, (str, bytes)):
             port = int(port)
+    else:
+        address, port = split_address_port_from_string(address)
 
     return address, port

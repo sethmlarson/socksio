@@ -77,3 +77,17 @@ def split_address_port_from_string(address: StrOrBytes) -> typing.Tuple[str, int
             "address with the port as a suffix, i.e. `127.0.0.1:3080`, "
             "`[0:0:0:0:0:0:0:1]:3080` or `localhost:3080`"
         ) from None
+
+
+def get_address_port_tuple_from_address(
+    address: typing.Union[StrOrBytes, typing.Tuple[StrOrBytes, int]]
+) -> typing.Tuple[str, int]:
+    """Returns an (address, port) from an address string-like or tuple."""
+    if isinstance(address, (str, bytes)):
+        address, port = split_address_port_from_string(address)
+    else:
+        address, port = address
+        if isinstance(port, (str, bytes)):
+            port = int(port)
+
+    return address, port

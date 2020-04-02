@@ -18,6 +18,9 @@ from socksio import (
         (("127.0.0.1", 3080), b"\x7f\x00\x00\x01", 3080),
         (("127.0.0.1", "3080"), b"\x7f\x00\x00\x01", 3080),
         ("127.0.0.1:8080", b"\x7f\x00\x00\x01", 8080),
+        ((b"127.0.0.1", 3080), b"\x7f\x00\x00\x01", 3080),
+        ((b"127.0.0.1", b"3080"), b"\x7f\x00\x00\x01", 3080),
+        (b"127.0.0.1:8080", b"\x7f\x00\x00\x01", 8080),
     ],
 )
 def test_socks4request_from_address(address, expected_address, expected_port) -> None:
@@ -56,6 +59,9 @@ def test_socks4request_from_address_dump_raises_if_no_user_id():
         (("127.0.0.1", 3080), b"\x7f\x00\x00\x01", 3080),
         (("127.0.0.1", "3080"), b"\x7f\x00\x00\x01", 3080),
         ("127.0.0.1:8080", b"\x7f\x00\x00\x01", 8080),
+        ((b"127.0.0.1", 3080), b"\x7f\x00\x00\x01", 3080),
+        ((b"127.0.0.1", b"3080"), b"\x7f\x00\x00\x01", 3080),
+        (b"127.0.0.1:8080", b"\x7f\x00\x00\x01", 8080),
     ],
 )
 def test_socks4arequest_from_address(address, expected_address, expected_port) -> None:

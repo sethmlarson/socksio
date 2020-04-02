@@ -1,12 +1,13 @@
 import enum
 import typing
 
+from ._types import StrOrBytes
 from .exceptions import ProtocolError, SOCKSError
 from .utils import (
     AddressType,
     decode_address,
     encode_address,
-    split_address_port_from_string,
+    get_address_port_tuple_from_address,
 )
 
 
@@ -46,7 +47,7 @@ class SOCKS4Request(typing.NamedTuple):
     def from_address(
         cls,
         command: SOCKS4Command,
-        address: typing.Union[str, typing.Tuple[str, int]],
+        address: typing.Union[StrOrBytes, typing.Tuple[StrOrBytes, int]],
         user_id: typing.Optional[bytes] = None,
     ) -> "SOCKS4Request":
         """Convenience class method to build an instance from command and address.
@@ -63,13 +64,7 @@ class SOCKS4Request(typing.NamedTuple):
         Raises:
             SOCKSError: If a domain name or IPv6 address was supplied.
         """
-        if isinstance(address, str):
-            address, port = split_address_port_from_string(address)
-        else:
-            address, port = address
-            if isinstance(port, str):
-                port = int(port)
-
+        address, port = get_address_port_tuple_from_address(address)
         atype, encoded_addr = encode_address(address)
         if atype != AddressType.IPV4:
             raise SOCKSError(
@@ -126,7 +121,7 @@ class SOCKS4ARequest(typing.NamedTuple):
     def from_address(
         cls,
         command: SOCKS4Command,
-        address: typing.Union[str, typing.Tuple[str, int]],
+        address: typing.Union[StrOrBytes, typing.Tuple[StrOrBytes, int]],
         user_id: typing.Optional[bytes] = None,
     ) -> "SOCKS4ARequest":
         """Convenience class method to build an instance from command and address.
@@ -140,13 +135,7 @@ class SOCKS4ARequest(typing.NamedTuple):
         Returns:
             A SOCKS4ARequest instance.
         """
-        if isinstance(address, str):
-            address, port = split_address_port_from_string(address)
-        else:
-            address, port = address
-            if isinstance(port, str):
-                port = int(port)
-
+        address, port = get_address_port_tuple_from_address(address)
         atype, encoded_addr = encode_address(address)
         return cls(command=command, addr=encoded_addr, port=port, user_id=user_id)
 

@@ -24,7 +24,7 @@ Features not yet implemented:
 
 ## Usage
 
-TL;DR check the [examples directory](examples/).
+TL;DR check the [examples directory](https://github.com/sethmlarson/socksio/tree/master/examples).
 
 Being sans-I/O means that in order to test `socksio` you need an I/O library.
 And the most basic I/O is, of course, the standard library's `socket` module.

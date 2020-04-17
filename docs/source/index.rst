@@ -11,8 +11,6 @@ protocols so you can use it in any I/O library you want.
 Current status: stable
 ----------------------
 
-The API is not final and may be subject to change.
-
 Features not yet implemented:
 
 -  SOCKS5 GSS-API authentication.

@@ -22,7 +22,7 @@ from .socks5 import (
     SOCKS5UsernamePasswordRequest,
 )
 
-__version__ = "0.2.0"
+__version__ = "1.0.0"
 
 __all__ = [
     "SOCKS4Request",

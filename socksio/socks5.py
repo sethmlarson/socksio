@@ -344,7 +344,7 @@ class SOCKS5Connection:
         self._data_to_send += request.dumps()
 
     @send.register(SOCKS5CommandRequest)  # type: ignore
-    def _command(self, request: SOCKS5AuthMethodsRequest) -> None:
+    def _command(self, request: SOCKS5CommandRequest) -> None:
         if self._state < SOCKS5State.CLIENT_AUTHENTICATED:
             raise ProtocolError(
                 "SOCKS5 connections must be authenticated before sending a request"

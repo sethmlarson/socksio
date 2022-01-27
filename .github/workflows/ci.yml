@@ -1,0 +1,55 @@
+---
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    name: "Lint checks"
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v2"
+      - uses: "actions/setup-python@v2"
+        with:
+          python-version: "3.9"
+
+      - name: "Install dependencies"
+        run: |
+          set -xe
+          pip install --upgrade pip
+          pip install --upgrade nox
+
+      - name: "Run nox linting session"
+        run: "nox -s check"
+
+  tests:
+    name: "Python ${{ matrix.python-version }}"
+    runs-on: "ubuntu-latest"
+    env:
+      USING_COVERAGE: "3.9"
+
+    strategy:
+      matrix:
+        python-version: ["3.6", "3.7", "3.8", "3.9"]
+
+    steps:
+      - uses: "actions/checkout@v2"
+      - uses: "actions/setup-python@v2"
+        with:
+          python-version: "${{ matrix.python-version }}"
+
+      - name: "install dependencies"
+        run: |
+          set -xe
+          python -vv
+          pip install --upgrade pip
+          pip install --upgrade nox
+
+      - name: "Run nox session for ${{ matrix.python-version }}"
+        run: "python -m nox -s test-${{ matrix.python-version }}"
+
+      - name: "Upload Coverage"
+        run: |
+          set -xe
+          pip install --upgrade codecov
+          codecov --required

@@ -11,7 +11,7 @@ def lint(session):
 
     session.run("autoflake", "--in-place", "--recursive", *source_files)
     session.run("seed-isort-config", "--application-directories=socksio")
-    session.run("isort", "--project=socksio", "--recursive", "--apply", *source_files)
+    session.run("isort", "--project=socksio", *source_files)
     session.run("black", "--target-version=py36", *source_files)
 
     check(session)
@@ -23,15 +23,13 @@ def check(session):
         "black", "flake8", "flake8-bugbear", "flake8-comprehensions", "mypy", "isort"
     )
 
-    session.run(
-        "isort", "--project=socksio", "--recursive", "--check-only", *source_files
-    )
+    session.run("isort", "--project=socksio", "--check-only", *source_files)
     session.run("black", "--check", "--diff", "--target-version=py36", *source_files)
     session.run("flake8", *source_files)
     session.run("mypy", "--strict", "socksio")
 
 
-@nox.session(python=["3.6", "3.7", "3.8"])
+@nox.session(python=["3.6", "3.7", "3.8", "3.9"])
 def test(session):
     session.install("-r", "test-requirements.txt")
     session.run("python", "-m", "pytest", *session.posargs)

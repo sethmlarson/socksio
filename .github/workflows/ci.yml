@@ -53,7 +53,7 @@ jobs:
         uses: "actions/upload-artifact@v2"
         with:
           name: coverage-data
-          path: ".coverage.*"
+          path: ".coverage*"
           if-no-files-found: error
 
   coverage:

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add support for Python 3.10
+
 ## 1.0.0 (2020-04-17)
 
 ### Changed

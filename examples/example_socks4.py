@@ -21,8 +21,10 @@ def main():
 
     # Request to connect to google.com port 80
     # SOCKS4 does not allow domain names, below is an IP for google.com
+    # Note that if the IP stops responding the SOCKS server will disconnect
+    # after a timeout, so it may be necessary to update it
     request = socks4.SOCKS4Request.from_address(
-        socks4.SOCKS4Command.CONNECT, ("216.58.204.78", 80)  # or "216.58.204.78:80"
+        socks4.SOCKS4Command.CONNECT, ("142.250.178.14", 80)  # or "142.250.178.14:80"
     )
     conn.send(request)
     send_data(sock, conn.data_to_send())

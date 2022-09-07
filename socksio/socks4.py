@@ -193,6 +193,9 @@ class SOCKS4Reply(typing.NamedTuple):
         Raises:
             ProtocolError: If the data does not match the spec.
         """
+        if isinstance(data, bytearray):
+            data = bytes(data)
+
         if len(data) != 8 or data[0:1] != b"\x00":
             raise ProtocolError("Malformed reply")
 

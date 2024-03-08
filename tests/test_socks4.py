@@ -1,3 +1,4 @@
+from typing import Type, Union
 import pytest
 
 from socksio import (
@@ -99,19 +100,20 @@ def test_socks4_connection_request(command: SOCKS4Command) -> None:
 
 
 @pytest.mark.parametrize("request_reply_code", list(SOCKS4ReplyCode))
-def test_socks4_receive_data(request_reply_code: bytes) -> None:
+@pytest.mark.parametrize("data_type", [bytes, bytearray])
+def test_socks4_receive_data(
+    request_reply_code: bytes, data_type: Union[Type[bytearray], Type[bytes]]
+) -> None:
     conn = SOCKS4Connection(user_id=b"socks")
-
-    reply = conn.receive_data(
-        b"".join(
-            [
-                b"\x00",
-                request_reply_code,
-                (8080).to_bytes(2, byteorder="big"),
-                b"\x7f\x00\x00\x01",
-            ]
-        )
+    data = b"".join(
+        [
+            b"\x00",
+            request_reply_code,
+            (8080).to_bytes(2, byteorder="big"),
+            b"\x7f\x00\x00\x01",
+        ]
     )
+    reply = conn.receive_data(data_type(data))
 
     assert reply == SOCKS4Reply(
         reply_code=SOCKS4ReplyCode(request_reply_code), port=8080, addr="127.0.0.1"

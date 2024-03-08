@@ -1,3 +1,4 @@
+from typing import Type, Union
 import pytest
 
 from socksio import (
@@ -285,12 +286,14 @@ def test_socks5_request_ipv6(
         ),
     ],
 )
+@pytest.mark.parametrize("data_type", [bytes, bytearray])
 def test_socks5_reply_success(
     authenticated_conn: SOCKS5Connection,
     atype: bytes,
     addr: bytes,
     expected_atype: SOCKS5AType,
     expected_addr: str,
+    data_type: Union[Type[bytes], Type[bytearray]],
 ) -> None:
     data = b"".join(
         [
@@ -302,7 +305,7 @@ def test_socks5_reply_success(
             (1080).to_bytes(2, byteorder="big"),  # port
         ]
     )
-    reply = authenticated_conn.receive_data(data)
+    reply = authenticated_conn.receive_data(data_type(data))
 
     assert authenticated_conn.state == SOCKS5State.TUNNEL_READY
     assert reply == SOCKS5Reply(
@@ -342,6 +345,7 @@ def test_socks5_receive_malformed_data(
         ),
     ],
 )
+@pytest.mark.parametrize("data_type", [bytes, bytearray])
 def test_socks5_reply_error(
     error_code: SOCKS5ReplyCode,
     authenticated_conn: SOCKS5Connection,
@@ -349,6 +353,7 @@ def test_socks5_reply_error(
     addr: bytes,
     expected_atype: SOCKS5AType,
     expected_addr: str,
+    data_type: Union[Type[bytes], Type[bytearray]],
 ) -> None:
     data = b"".join(
         [
@@ -360,7 +365,7 @@ def test_socks5_reply_error(
             (1080).to_bytes(2, byteorder="big"),  # port
         ]
     )
-    reply = authenticated_conn.receive_data(data)
+    reply = authenticated_conn.receive_data(data_type(data))
 
     assert authenticated_conn.state == SOCKS5State.MUST_CLOSE
     assert reply == SOCKS5Reply(

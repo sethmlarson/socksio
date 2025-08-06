@@ -259,7 +259,7 @@ class SOCKS5Reply(typing.NamedTuple):
             return cls(
                 reply_code=SOCKS5ReplyCode(data[1:2]),
                 atype=atype,
-                addr=decode_address(AddressType.from_socks5_atype(atype), data[4:-2]),
+                addr=decode_address(AddressType.from_socks5_atype(atype), bytes(data[4:-2])),
                 port=int.from_bytes(data[-2:], byteorder="big"),
             )
         except ValueError as exc:

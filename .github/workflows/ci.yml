@@ -1,15 +1,21 @@
 ---
 name: CI
 
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
+
+permissions: {}
+
+env:
+  FORCE_COLOR: 1
+  PIP_DISABLE_PIP_VERSION_CHECK: 1
 
 jobs:
   lint:
     name: "Lint checks"
     runs-on: "ubuntu-latest"
     steps:
-      - uses: "actions/checkout@v2"
-      - uses: "actions/setup-python@v2"
+      - uses: "actions/checkout@v7"
+      - uses: "actions/setup-python@v7"
         with:
           python-version: "3.9"
 
@@ -29,12 +35,13 @@ jobs:
       USING_COVERAGE: "3.9"
 
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
 
     steps:
-      - uses: "actions/checkout@v2"
-      - uses: "actions/setup-python@v2"
+      - uses: "actions/checkout@v7"
+      - uses: "actions/setup-python@v7"
         with:
           python-version: "${{ matrix.python-version }}"
 

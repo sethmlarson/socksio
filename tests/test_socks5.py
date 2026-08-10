@@ -112,7 +112,7 @@ def test_socks5_auth_reply_no_acceptable_auth_method() -> None:
     conn = SOCKS5Connection()
     auth_request = SOCKS5AuthMethodsRequest([SOCKS5AuthMethod.USERNAME_PASSWORD])
     conn.send(auth_request)
-    reply = conn.receive_data(b"\x05\xFF")
+    reply = conn.receive_data(b"\x05\xff")
 
     assert reply == SOCKS5AuthReply(method=SOCKS5AuthMethod.NO_ACCEPTABLE_METHODS)
 

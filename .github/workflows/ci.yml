@@ -31,8 +31,6 @@ jobs:
   tests:
     name: "Python ${{ matrix.python-version }}"
     runs-on: "ubuntu-latest"
-    env:
-      USING_COVERAGE: "3.9"
 
     strategy:
       fail-fast: false
@@ -56,7 +54,6 @@ jobs:
         run: "python -m nox -s test-${{ matrix.python-version }}"
 
       - name: "Upload Coverage"
-        run: |
-          set -xe
-          pip install --upgrade codecov
-          codecov --required
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          name: Python ${{ matrix.python-version }}

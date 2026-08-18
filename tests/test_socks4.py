@@ -122,8 +122,8 @@ def test_socks4_receive_data(request_reply_code: bytes) -> None:
     "data",
     [
         b"\x00Z\x1f\x90\x7f\x00\x00",  # missing one byte
-        b"\x0FZ\x1f\x90\x7f\x00\x00\x01",  # not starting with 0
-        b"\x00\xFF\x1f\x90\x7f\x00\x00\x01",  # incorrect reply code
+        b"\x0fZ\x1f\x90\x7f\x00\x00\x01",  # not starting with 0
+        b"\x00\xff\x1f\x90\x7f\x00\x00\x01",  # incorrect reply code
     ],
 )
 def test_socks4_receive_malformed_data(data: bytes) -> None:
@@ -146,6 +146,6 @@ def test_SOCKS4A_connection_request(command: SOCKS4Command) -> None:
     assert data[0:1] == b"\x04"
     assert data[1:2] == command
     assert data[2:4] == (8080).to_bytes(2, byteorder="big")
-    assert data[4:8] == b"\x00\x00\x00\xFF"
+    assert data[4:8] == b"\x00\x00\x00\xff"
     assert data[8:14] == b"socks\x00"
     assert data[14:] == b"proxy.example.com\x00"

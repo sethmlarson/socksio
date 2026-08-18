@@ -18,7 +18,7 @@ class SOCKS5AuthMethod(bytes, enum.Enum):
     NO_AUTH_REQUIRED = b"\x00"
     GSSAPI = b"\x01"
     USERNAME_PASSWORD = b"\x02"
-    NO_ACCEPTABLE_METHODS = b"\xFF"
+    NO_ACCEPTABLE_METHODS = b"\xff"
 
 
 class SOCKS5Command(bytes, enum.Enum):

@@ -14,10 +14,10 @@ from .utils import (
 class SOCKS4ReplyCode(bytes, enum.Enum):
     """Enumeration of SOCKS4 reply codes."""
 
-    REQUEST_GRANTED = b"\x5A"
-    REQUEST_REJECTED_OR_FAILED = b"\x5B"
-    CONNECTION_FAILED = b"\x5C"
-    AUTHENTICATION_FAILED = b"\x5D"
+    REQUEST_GRANTED = b"\x5a"
+    REQUEST_REJECTED_OR_FAILED = b"\x5b"
+    CONNECTION_FAILED = b"\x5c"
+    AUTHENTICATION_FAILED = b"\x5d"
 
 
 class SOCKS4Command(bytes, enum.Enum):
@@ -161,7 +161,7 @@ class SOCKS4ARequest(typing.NamedTuple):
                 b"\x04",
                 self.command,
                 (self.port).to_bytes(2, byteorder="big"),
-                b"\x00\x00\x00\xFF",  # arbitrary final non-zero byte
+                b"\x00\x00\x00\xff",  # arbitrary final non-zero byte
                 user_id,
                 b"\x00",
                 self.addr,

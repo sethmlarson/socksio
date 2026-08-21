@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Add support for Python 3.10
+- Drop support for Python <3.10, Python 3.10 is now the minimum supported/tested version
 
 ## 1.0.0 (2020-04-17)
 

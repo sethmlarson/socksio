@@ -7,6 +7,10 @@ name = "socksio"
 authors = [
     { name = "Seth Michael Larson", email = "sethmichaellarson@gmail.com" },
 ]
+maintainers = [
+    { name = "Seth Michael Larson", email = "sethmichaellarson@gmail.com" },
+    { name = "Illia Volochii", email = "illia.volochii@gmail.com" },
+]
 readme = "README.md"
 requires-python = ">=3.6"
 dynamic = ["version", "description"]

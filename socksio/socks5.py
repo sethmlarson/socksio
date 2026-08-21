@@ -250,6 +250,9 @@ class SOCKS5Reply(typing.NamedTuple):
         Raises:
             ProtocolError: If the data does not match the spec.
         """
+        if isinstance(data, bytearray):
+            data = bytes(data)
+
         if data[0:1] != b"\x05":
             raise ProtocolError("Malformed reply")
 

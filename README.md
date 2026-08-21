@@ -1,6 +1,6 @@
 # SOCKSIO
 
-[![Build Status](https://travis-ci.org/sethmlarson/socksio.svg?branch=master)](https://travis-ci.org/sethmlarson/socksio)
+[![Build Status](https://github.com/sethmlarson/socksio/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/sethmlarson/socksio/actions/workflows/ci.yml?query=branch%3Amaster)
 [![codecov](https://codecov.io/gh/sethmlarson/socksio/branch/master/graph/badge.svg)](https://codecov.io/gh/sethmlarson/socksio)
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/socksio.svg)](https://pypi.org/project/socksio)
 [![PyPI](https://img.shields.io/pypi/v/socksio.svg)](https://pypi.org/project/socksio)

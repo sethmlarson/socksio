@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add support for Python 3.10
+- Enable trusted publishing to PyPI
 
 ## 1.0.0 (2020-04-17)
 

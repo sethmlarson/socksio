@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Drop support for Python <3.10, Python 3.10 is now the minimum supported/tested version
+- Enable trusted publishing to PyPI [#71](https://github.com/sethmlarson/socksio/pull/71).
 
 ## 1.0.0 (2020-04-17)
 

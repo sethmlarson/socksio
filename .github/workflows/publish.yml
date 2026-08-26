@@ -23,7 +23,6 @@ jobs:
       - name: "Checkout repository"
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
           persist-credentials: false
 
       - name: "Setup Python"
@@ -86,8 +85,6 @@ jobs:
 
       - name: "Publish dists to PyPI"
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
-        with:
-          attestations: true
 
   publish-to-test-pypi:
     name: "Publish to Test PyPI"
@@ -109,4 +106,3 @@ jobs:
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
         with:
           repository-url: "https://test.pypi.org/legacy/"
-          attestations: true

@@ -1,8 +1,8 @@
 import enum
 import typing
+from functools import singledispatchmethod
 
 from ._types import StrOrBytes
-from .compat import singledispatchmethod
 from .exceptions import ProtocolError
 from .utils import (
     AddressType,

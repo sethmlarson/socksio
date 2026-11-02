@@ -85,7 +85,7 @@ class SOCKS4Request(typing.NamedTuple):
         Raises:
             SOCKSError: If no user was specified in this call or on initialization.
         """
-        user_id = user_id or self.user_id
+        user_id = self.user_id if user_id is None else user_id
         if user_id is None:
             raise SOCKSError("SOCKS4 requires a user_id, none was specified")
 
@@ -152,7 +152,7 @@ class SOCKS4ARequest(typing.NamedTuple):
         Raises:
             SOCKSError: If no user was specified in this call or on initialization.
         """
-        user_id = user_id or self.user_id
+        user_id = self.user_id if user_id is None else user_id
         if user_id is None:
             raise SOCKSError("SOCKS4 requires a user_id, none was specified")
 
@@ -228,7 +228,7 @@ class SOCKS4Connection:
         Args:
             request: The request instance to be packed.
         """
-        user_id = request.user_id or self.user_id
+        user_id = self.user_id if request.user_id is None else request.user_id
         self._data_to_send += request.dumps(user_id=user_id)
 
     def receive_data(self, data: bytes) -> SOCKS4Reply:

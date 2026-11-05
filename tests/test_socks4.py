@@ -149,3 +149,59 @@ def test_SOCKS4A_connection_request(command: SOCKS4Command) -> None:
     assert data[4:8] == b"\x00\x00\x00\xff"
     assert data[8:14] == b"socks\x00"
     assert data[14:] == b"proxy.example.com\x00"
+
+
+@pytest.mark.parametrize("request_type", [SOCKS4Request, SOCKS4ARequest])
+@pytest.mark.parametrize("command", [SOCKS4Command.CONNECT, SOCKS4Command.BIND])
+@pytest.mark.parametrize("stored_user", [None, b"stored-user"])
+def test_socks4_dump_empty_user_id_override(request_type, command, stored_user):
+    request = request_type.from_address(
+        command,
+        "127.0.0.1:8080" if request_type is SOCKS4Request else "example.com:8080",
+        user_id=stored_user,
+    )
+    data = request.dumps(user_id=b"")
+    assert data[:4] == b"\x04" + command + b"\x1f\x90"
+    assert data[8:] == (
+        b"\x00" if request_type is SOCKS4Request else b"\x00example.com\x00"
+    )
+    assert request.user_id == stored_user
+
+
+@pytest.mark.parametrize("request_type", [SOCKS4Request, SOCKS4ARequest])
+@pytest.mark.parametrize("command", [SOCKS4Command.CONNECT, SOCKS4Command.BIND])
+def test_socks4_connection_empty_request_user_id(request_type, command):
+    conn = SOCKS4Connection(user_id=b"connection-user")
+    request = request_type.from_address(
+        command,
+        "127.0.0.1:8080" if request_type is SOCKS4Request else "example.com:8080",
+        user_id=b"",
+    )
+    conn.send(request)
+    data = conn.data_to_send()
+    assert data[8:] == (
+        b"\x00" if request_type is SOCKS4Request else b"\x00example.com\x00"
+    )
+
+    # An explicit request ID must not alter the connection's default.
+    request = request_type.from_address(
+        command,
+        "127.0.0.1:8080" if request_type is SOCKS4Request else "example.com:8080",
+    )
+    conn.send(request)
+    assert conn.data_to_send()[8:].startswith(b"connection-user\x00")
+    assert conn.data_to_send() == b""
+
+
+@pytest.mark.parametrize("request_type", [SOCKS4Request, SOCKS4ARequest])
+def test_socks4_connection_empty_default_user_id(request_type):
+    conn = SOCKS4Connection(user_id=b"")
+    request = request_type.from_address(
+        SOCKS4Command.CONNECT,
+        "127.0.0.1:8080" if request_type is SOCKS4Request else "example.com:8080",
+    )
+    conn.send(request)
+    data = conn.data_to_send()
+    assert data[8:] == (
+        b"\x00" if request_type is SOCKS4Request else b"\x00example.com\x00"
+    )
